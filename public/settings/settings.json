@@ -1,0 +1,47 @@
+{
+      "$schema": "./settings.schema.json",
+      "host": "https://corner.dance",
+      "language-support": {
+            "ko-KR": "한국어"
+      },
+      "board": {
+            "listLen": 10,
+            "contentsLen": 500,
+            "tagDisplayCnt": 10,
+            "tagLenLim": 20,
+            "tagCountLim": 10
+      },
+      "follow": {
+            "limit": 100,
+            "recommendLen": 4,
+            "followLen": 7
+      },
+      "block": {
+            "limit": 300
+      },
+      "session": {
+            "maxAge": 36000000
+      },
+      "cookie": {
+            "maxAge": 86400000,
+            "secret": "brownie"
+      },
+      "database": {
+            "host": "127.0.0.1",
+            "port": 3306,
+            "username": "root",
+            "password": "ekfkfktk2!",
+            "database": "brownie"
+      },
+      "log": {
+            "interval": 8640000000,
+            "directory": "logs"
+      },
+      "https": {
+            "key": "/etc/letsencrypt/live/corner.dance/privkey.pem",
+            "cert": "/etc/letsencrypt/live/corner.dance/cert.pem",
+            "ca": "/etc/letsencrypt/live/corner.dance/fullchain.pem"
+      },
+      "port": 4416,
+      "extension": "https://chrome.google.com/webstore/detail/corner/onkbamknephmfkcbgegadepncekiadae"
+}

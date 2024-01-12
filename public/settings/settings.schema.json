@@ -1,0 +1,122 @@
+{
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {
+            "$schema": {
+                  "type": "string",
+                  "enum": [
+                        "./settings.schema.json"
+                  ]
+            },
+            "host": {
+                  "type": "string"
+            },
+            "language-support": {
+                  "type": "object"
+            },
+            "board": {
+                  "type": "object",
+                  "properties": {
+                        "listLen": {
+                              "type": "number"
+                        },
+                        "contentsLen": {
+                              "type": "number"
+                        },
+                        "tagDisplayCnt": {
+                              "type": "number"
+                        },
+                        "tagLenLim": {
+                              "type": "number"
+                        },
+                        "tagCountLim": {
+                              "type": "number"
+                        }
+                  }
+            },
+            "follow": {
+                  "type": "object",
+                  "properties": {
+                        "limit": {
+                              "type": "number"
+                        },
+                        "recommendLen": {
+                              "type": "number"
+                        },
+                        "followLen": {
+                              "type": "number"
+                        }
+                  }
+            },
+            "session": {
+                  "type": "object",
+                  "properties": {
+                        "maxAge": {
+                              "type": "number"
+                        }
+                  }
+            },
+            "cookie": {
+                  "type": "object",
+                  "properties": {
+                        "maxAge": {
+                              "type": "number"
+                        },
+                        "secret": {
+                              "type": "number"
+                        }
+                  }
+            },
+            "database": {
+                  "type": "object",
+                  "properties": {
+                        "host": {
+                              "type": "string"
+                        },
+                        "port": {
+                              "type": "number"
+                        },
+                        "username": {
+                              "type": "string"
+                        },
+                        "password": {
+                              "type": "string"
+                        },
+                        "database": {
+                              "type": "string"
+                        }
+                  }
+            },
+            "log": {
+                  "type": "object",
+                  "properties": {
+                        "interval": {
+                              "type": "number"
+                        },
+                        "directory": {
+                              "type": "string"
+                        }
+                  }
+            },
+            "https": {
+                  "type": "object",
+                  "properties": {
+                        "key": {
+                              "type": "string"
+                        },
+                        "cert": {
+                              "type": "string"
+                        },
+                        "ca": {
+                              "type": "string"
+                        }
+                  }
+            },
+            "port": {
+                  "type": "number"
+            },
+            "extension": {
+                  "type": "string"
+            }
+      }
+}
