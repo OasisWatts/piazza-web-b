@@ -36,8 +36,11 @@ DB.initialize().then(() => {
       //       // req.decoded.isLogined = true
       //       next()
       // })
+      app.get("/", async (req, res) => {
+            res.send("succeed1")
+      })
       app.get("/test", async (req, res) => {
-            res.send("succeed")
+            res.send("succeed2")
       })
       app.get("/feed", verifyToken, async (req, res, next) => {
             const startId = Number(req.query.sid)
