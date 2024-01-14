@@ -10,7 +10,7 @@ export default class User {
 
       /** 아이디 */
       @Column({ type: "varchar" })
-      public socialId!: string
+      public uid!: string
 
       /** 아이디 */
       @Column({ type: "varchar" })

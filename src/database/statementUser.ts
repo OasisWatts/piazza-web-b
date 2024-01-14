@@ -3,16 +3,24 @@ import { ErrorCode } from "common/applicationCode"
 import User from "model/user"
 import { Logger } from "util/logger"
 import { SETTINGS } from "util/setting"
+import admin from 'firebase-admin'
+import { OAuth2Client } from 'google-auth-library';
+import { getAuth } from "firebase-admin/auth"
+var serviceAccount = require("../../firebase-service-account.json")
 
 const MAX_FRIENDS = SETTINGS.follow.limit
 const MAX_BLOCKS = SETTINGS.block.limit
 const MAX_FOLLOW_RECOMM = SETTINGS.follow.recommendLen
 const MAX_FOLLOW_LEN = SETTINGS.follow.followLen
+
+admin.initializeApp({
+      credential: admin.credential.cert(serviceAccount)
+})
+const client = new OAuth2Client();
 /**
  * 친구 관련 트랜잭션 함수를 가진 클래스.
  */
 export class StatementUser {
-
       public static getUser(userKey: number): Promise<{ name: string, image: string }> {
             return new Promise((resolve, reject) => {
                   DB.Manager.findOne(User, {
@@ -217,42 +225,77 @@ export class StatementUser {
             })
       }
 
-      /**
-       * 로그인 또는 계정 생성
-       * @param socialId 구글 소셜 로그인 생성 아이디
-       * @param name 
-       * @param email 
-       */
-      public static async signIn(socialId: string, email: string) {
-            return new Promise((resolve, reject) => {
-                  DB.Manager.findOne(User, { where: { socialId, email } }).then((user) => {
-                        if (user) {
-                              Logger.passApp("signIn").put("complete").out()
-                              resolve({ signed: true, userKey: user.key, name: user.name, image: user.image })
-                        } else {
-                              resolve({ needSignUp: true })
-                        }
-                  }).catch((err) => Logger.errorApp(ErrorCode.user_find_failed).put("signIn").put(err).out())
-            })
+      public static decodeToken(idToken: string, signedMethod: string) {
+            if (signedMethod == "google") {
+                  return new Promise((resolve, reject) => {
+                        client.verifyIdToken({
+                              idToken: idToken,
+                              audience: "1014849903887-9mnmap14qoqt5mps4458tgumbhu6pdf7.apps.googleusercontent.com",  // Specify the CLIENT_ID of the app that accesses the backend
+                              // Or, if multiple clients access the backend:
+                              //[CLIENT_ID_1, CLIENT_ID_2, CLIENT_ID_3]
+                        }).then((ticket) => {
+                              const payload = ticket.getPayload();
+                              console.log(payload)
+                              resolve({ uid: payload.sub, email: payload.email })
+                        }).catch((error) => {
+                              Logger.errorApp(ErrorCode.token_failed).put(error).out()
+                        })
+                  })
+            } else if (signedMethod == "email") {
+                  return new Promise((resolve, reject) => {
+                        getAuth()
+                              .verifyIdToken(idToken)
+                              .then((decodedToken) => {
+                                    resolve({ uid: decodedToken.uid, email: decodedToken.email })
+                              })
+                              .catch((error) => {
+                                    Logger.errorApp(ErrorCode.token_failed).put(error).out()
+                              })
+                  })
+            } else return null
       }
       /**
        * 로그인 또는 계정 생성
-       * @param socialId 구글 소셜 로그인 생성 아이디
-       * @param name 
-       * @param email 
        */
-      public static async signUp(socialId: string, name: string, email: string) {
-            return new Promise((resolve, reject) => {
-                  DB.Manager.findOne(User, { where: { socialId, email } }).then((user) => {
-                        if (!user) {
-                              DB.Manager.save(User, { socialId, name, email }).then((res) => {
-                                    Logger.passApp("signUp").put("complete").out()
-                                    resolve({ signed: true, userKey: res.key })
-                                    return
-                              }).catch((err) => Logger.errorApp(ErrorCode.user_save_failed).put("signUp").put(err).out())
-                        }
+      public static async signIn(token: string, signedMethod: string) {
+            console.log("1")
+            const decodedToken = await StatementUser.decodeToken(token, signedMethod)
+            console.log("2")
+            if (decodedToken) {
+                  return new Promise((resolve, reject) => {
+                        console.log("signIn", decodedToken)
+                        DB.Manager.findOne(User, { where: { uid: decodedToken["uid"], email: decodedToken["email"] } }).then((user) => {
+                              if (user) {
+                                    Logger.passApp("signIn").put("complete").out()
+                                    resolve({ signed: true, userKey: user.key, name: user.name, image: user.image })
+                              } else {
+                                    console.log("needSignUp")
+                                    resolve({ needSignUp: true })
+                              }
+                        }).catch((err) => Logger.errorApp(ErrorCode.user_find_failed).put("signIn").put(err).out())
                   })
-            })
+            } else return null
+      }
+      /**
+       * 로그인 또는 계정 생성
+       */
+      public static async signUp(token: string, name: string, signedMethod: string) {
+            const decodedToken = await StatementUser.decodeToken(token, signedMethod)
+            if (decodedToken) {
+                  return new Promise((resolve, reject) => {
+                        DB.Manager.findOne(User, { where: { uid: decodedToken["uid"], email: decodedToken["email"] } }).then((user) => {
+                              if (!user) {
+                                    DB.Manager.save(User, { name, uid: decodedToken["uid"], email: decodedToken["email"] }).then((res) => {
+                                          Logger.passApp("signUp").put("complete").out()
+                                          resolve({ signed: true, userKey: res.key })
+                                          return
+                                    }).catch((err) => Logger.errorApp(ErrorCode.user_save_failed).put("signUp").put(err).out())
+                              } else {
+                                    resolve({ signed: false, already_exists: true })
+                              }
+                        })
+                  })
+            } else return null
       }
       /**
        * 로그인 또는 계정 생성

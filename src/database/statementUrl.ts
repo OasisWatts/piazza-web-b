@@ -63,11 +63,9 @@ export class statementUrl {
         if (!url) {
             url = await DB.Manager.save(Url, { url: urlWoHash, hostname: hostname_ })
         } else {
-            console.log("post url", url)
             const _reacted = await DB.Manager.query(`select * from \`user_reacted_urls_url\` where userKey=${userKey} and urlId=${url.id}`)
             reacted = _reacted.length ? true : false
         }
-        console.log("get url", url)
         return ({
             uid: url.id,
             url: url.url,

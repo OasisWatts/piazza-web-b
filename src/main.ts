@@ -64,7 +64,7 @@ DB.initialize().then(() => {
             res.json(result)
       })
       // 검색어의 게시글 목록 조회.
-      // app.get("/searchboards", verifyToken, async (req, res, next) => {
+      // app.get("/searchboards", verification, async (req, res, next) => {
       //       const startId = Number(req.query.sid)
       //       const search = String(req.query.s)
       //       const userKey = req.decoded.userKey
@@ -74,7 +74,7 @@ DB.initialize().then(() => {
       //       }
       // })
       // // 유저의 게시글 목록 조회.
-      // app.get("/userboards", verifyToken, async (req, res, next) => {
+      // app.get("/userboards", verification, async (req, res, next) => {
       //       const startId = Number(req.query.sid)
       //       const searchUser = Number(req.query.u)
       //       const userKey = req.decoded.userKey
@@ -157,10 +157,9 @@ DB.initialize().then(() => {
       })
       // 로그인 또는 계정 생성 (구글 소셜)
       app.post("/signIn", async (req, res) => { // get 으로 하지말기
-            const id = String(req.body.i)
-            const email = String(req.body.e)
-
-            const result: any = await StatementUser.signIn(id, email)
+            const token = String(req.body.t)
+            const signedMethod = String(req.body.m)
+            const result: any = await StatementUser.signIn(token, signedMethod)
             if (result) {
                   if (result.signed) {
                         const token = jwt.sign({
@@ -172,15 +171,15 @@ DB.initialize().then(() => {
                   } else if (result.needSignUp) {
                         res.json({ needSignUp: true })
                   } else res.json({ signed: false })
-            }
+            } else res.json({ signed: false })
       })
       app.post("/signUp", async (req, res) => {
-            const id = String(req.body.i)
+            const token = String(req.body.t)
             const name = String(req.body.n)
-            const email = String(req.body.e)
-            console.log("signUp", id, name, email)
-
-            const result: any = await StatementUser.signUp(id, name, email)
+            const signedMethod = String(req.body.m)
+            console.log("signUp", name, token)
+            if (name.length < 2) return
+            const result: any = await StatementUser.signUp(token, name, signedMethod)
             if (result.signed) {
                   const token = jwt.sign({
                         userKey: result.userKey
@@ -188,10 +187,12 @@ DB.initialize().then(() => {
                         expiresIn: "7d"
                   })
                   res.json({ signed: true, name: result.name, image: result.image, token })
+            } else if (result.already_exists) {
+                  res.json({ signed: false, already_exists: true })
             } else res.json({ signed: false })
       })
       // 게시글 조회.(랜더링된 화면에서)
-      // app.get("/boardload", verifyToken, async (req, res, next) => {
+      // app.get("/boardload", async (req, res, next) => {
       //       const boardId = Number(req.query.id)
       //       const userKey = req.decoded.userKey
       //       else {
@@ -199,7 +200,7 @@ DB.initialize().then(() => {
       //             res.send(JSON.stringify(board))
       //       }
       // })
-      // app.get("/*", verifyToken, async (req, res, next) => {
+      // app.get("/*", async (req, res, next) => {
       //       res.send("hi")
       // })
       if (!CLOTHES.development && SETTINGS.https) {
