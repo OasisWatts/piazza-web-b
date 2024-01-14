@@ -184,6 +184,7 @@ export class StatementBoard {
                               for (const item of bList) {
                                     const user_: any = userTable[item.writer]
                                     console.log("board url", item.urlId)
+                                    if (user_ == null) continue
                                     if (item.urlId == null) {
                                           boardList.push({
                                                 id: item.id,
