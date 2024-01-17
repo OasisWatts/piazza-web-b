@@ -56,7 +56,7 @@ export class StatementBoard {
 
             const urlObj = await DB.Manager.findOne(Url, { where: { id: url }, select: ["id"] }).catch((err) => Logger.errorApp(ErrorCode.url_find_failed).put("getUrlBoards").put(err).out())
             if (urlObj) {
-                  let whereQuery = `where urlId = ${urlObj.id} ${startId ? ` and id < ${startId}` : ""}`
+                  let whereQuery = `where urlId = ${urlObj.id} ${startId ? ` and id < ${startId}` : ""} and isPublic = true`
                   const bList = await DB.Manager.query(
                         `select *, (select count(id) from \`comment\` where boardId = a.id) as comNum ${selectAndQuery}
                                     from ( select id ${fromQuery} ${whereQuery} ${orderQuery}
@@ -68,7 +68,7 @@ export class StatementBoard {
       }
       /** 전체 항목에서 보여줄 게시글 가져오기. (게시글을 넉넉히 뽑은뒤, up이 높은 것을 보여줌 - 모든 게시글을 다 보여줄 필요 없음 ) */
       private static async getFeeds(startId: number, userKey: number, blockeds: number[]): Promise<any[]> {
-            let whereQuery: string = startId ? `where id < ${startId}` : ""
+            let whereQuery: string = startId ? `where id < ${startId} and isPublic = true` : "where isPublic = true"
             let fromQuery: string = "from \`board\`"
             let orderQuery = `order by id desc limit ${MAX_LIST_LEN}`
             let selectAndQuery = `, (select count(*) from \`user_reacted_boards_board\` where userKey = ${userKey} and boardId = a.id) as reacted`
