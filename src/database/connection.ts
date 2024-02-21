@@ -10,6 +10,9 @@ import User from "model/user"
 import Board from "model/board";
 import Comment from "model/comment";
 import Url from "model/url";
+import RefreshToken from "model/token";
+import HashTag from "model/hashTag";
+import UserHashTag from "model/userHashTag";
 
 export default class DB {
       public static connection: DataSource
@@ -25,7 +28,10 @@ export default class DB {
                   User,
                   Board,
                   Comment,
-                  Url
+                  Url,
+                  HashTag,
+                  UserHashTag,
+                  RefreshToken
             ]
 
             DB.connection = new DataSource({
@@ -36,6 +42,7 @@ export default class DB {
                   synchronize: true, // synchronize: true여야 수정 entity가 반영
                   entities,
                   cache: true,
+                  // logging: true,
                   // ssl: SSL_OPTIONS,
             })
             await DB.connection.initialize()

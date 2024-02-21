@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "jest",
     "build-back": "webpack --config ./webpack.back.config.js --mode development",
     "server": "node build/process.js",
     "server-dev": "node build/main.js"
@@ -34,6 +34,7 @@
     "webpack-dev-server": "^4.15.1"
   },
   "devDependencies": {
-    "@types/express-session": "^1.17.10"
+    "@types/express-session": "^1.17.10",
+    "pm2": "^5.3.1"
   }
 }

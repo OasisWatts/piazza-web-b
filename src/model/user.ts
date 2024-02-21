@@ -2,6 +2,7 @@ import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, ManyToMany, J
 import Board from "./board"
 import Comment from "./comment"
 import Url from "./url"
+import UserHashTag from "./userHashTag"
 
 @Entity({ name: "user", schema: "brownie" })
 export default class User {
@@ -48,21 +49,45 @@ export default class User {
       @JoinTable()
       public reactedUrls!: Url[]
 
-      /** 좋아한 글과 관계 설정. */
+      /** 업한 글과 관계 설정. */
       @ManyToMany(
             () => Board,
-            (reactedBoards) => reactedBoards.reactedUsers,
+            (upedBoards) => upedBoards.upedUsers,
       )
       @JoinTable()
-      public reactedBoards!: Board[]
+      public upedBoards!: Board[]
 
-      /** 좋아한 댓글과 관계 설정. */
+      /** 다운한 글과 관계 설정. */
+      @ManyToMany(
+            () => Board,
+            (downedBoards) => downedBoards.downedUsers,
+      )
+      @JoinTable()
+      public downedBoards!: Board[]
+
+      /** 업한 댓글과 관계 설정. */
       @ManyToMany(
             () => Comment,
-            (reactedComments) => reactedComments.reactedUsers,
+            (upedComments) => upedComments.upedUsers,
       )
       @JoinTable()
-      public reactedComments!: Comment[]
+      public upedComments!: Comment[]
+
+      /** 다운한 댓글과 관계 설정. */
+      @ManyToMany(
+            () => Comment,
+            (downedComments) => downedComments.downedUsers,
+      )
+      @JoinTable()
+      public downedComments!: Comment[]
+
+      /** 사용한 해시 태그. */
+      @ManyToMany(
+            () => UserHashTag,
+            (usedHashTags) => usedHashTags.user,
+      )
+      @JoinTable()
+      public usedHashTags!: UserHashTag[]
 
       /** 팔로윙하고 있는 유저 관계 설정. */
       @ManyToMany(

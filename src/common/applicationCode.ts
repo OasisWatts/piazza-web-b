@@ -17,22 +17,19 @@ export enum ErrorCode {
       board_update_bad_request,
       board_insert_failed,
       board_find_failed,
-      board_like_delete_failed,
-      board_like_insert_failed,
-      board_like_increment,
-      board_like_decrement,
       comment_unfound,
       comment_insert_failed,
       comment_update_failed,
       comment_update_bad_request,
       comment_delete_failed,
-      comment_like_delete_failed,
-      comment_like_insert_failed,
-      comment_like_increment,
-      comment_like_decrement,
+      hashtag_failed,
+      user_hashtag_failed,
       url_find_failed,
       follow_find_failed,
-      follow_recommend_find_failed
+      follow_recommend_find_failed,
+      api_failed,
+      refreshToken_create_failed,
+      verify_token_failed
 }
 
 export enum BOARD_CATEGORY {

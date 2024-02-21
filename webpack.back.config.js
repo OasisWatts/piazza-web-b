@@ -25,6 +25,7 @@ const config = {
                   // back: path.resolve(__dirname, "src/back"),
                   // front: path.resolve(__dirname, "src/front"),
                   database: path.resolve(__dirname, "src/database"),
+                  controller: path.resolve(__dirname, "src/controller"),
                   model: path.resolve(__dirname, "src/model"),
                   util: path.resolve(__dirname, "src/util"),
                   common: path.resolve(__dirname, "src/common"),

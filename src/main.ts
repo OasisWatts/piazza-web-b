@@ -1,18 +1,20 @@
 import express from "express"
 import DB from "database/connection"
-import { StatementBoard } from "database/statementBoard"
 import { CLOTHES, SETTINGS, writeClientConstants } from "util/setting"
-import { BOARD_CATEGORY } from "common/applicationCode"
-import { StatementUser } from "database/statementUser"
 import https from "https"
 import fs from "fs"
-import { statementUrl } from "database/statementUrl"
-import jwt from "jsonwebtoken"
+import { sendWithNewToken, sendWithNewTokenJSON } from "database/token"
 require('dotenv').config();
+
+const boardListController = require("controller/boardList")
+const boardController = require("controller/board")
+const commentController = require("controller/comment")
+const urlController = require("controller/url")
+const signController = require("controller/sign")
+const userController = require("controller/user")
 
 const { verifyToken } = require("database/token")
 const app = express()
-const MAX_CONTENTS_LEN = SETTINGS.board.contentsLen
 
 declare global {
       namespace Express {
@@ -42,33 +44,10 @@ DB.initialize().then(() => {
       app.get("/test", async (req, res) => {
             res.send("succeed2")
       })
-      app.get("/feed", verifyToken, async (req, res, next) => {
-            const startId = Number(req.query.sid)
-            const userKey = req.decoded.userKey
-            const result = await StatementBoard.boardList(startId, BOARD_CATEGORY.feed, userKey)
-            res.json(result)
-      }) // 본인이 작성한 게시글 목록 조회.
-      app.get("/myboards", verifyToken, async (req, res, next) => {
-            const startId = Number(req.query.sid)
-            const userKey = req.decoded.userKey
-            console.log("my boards0", userKey)
-            const result = await StatementBoard.boardList(startId, BOARD_CATEGORY.myBoards, userKey)
-            res.json(result)
-      }) // 본인이 up한 게시글 목록 조회.
-      app.get("/reactedboards", verifyToken, async (req, res, next) => {
-            const startId = Number(req.query.sid)
-            const userKey = req.decoded.userKey
-            const result = await StatementBoard.boardList(startId, BOARD_CATEGORY.myUpBoards, userKey)
-            res.json(result)
-      }) // 같은 url의 게시글 목록 조회.
-      app.get("/urlboards", verifyToken, async (req, res, next) => {
-            const startId = Number(req.query.sid)
-            const urlid = Number(req.query.uid)
-            const userKey = req.decoded.userKey
-            console.log("urlboards")
-            const result = await StatementBoard.boardList(startId, BOARD_CATEGORY.urlBoards, userKey, urlid)
-            res.json(result)
-      })
+      app.get("/myboards", verifyToken, boardListController.apiGetMyBoards, sendWithNewTokenJSON) // 본인이 작성한 게시글 목록 조회.
+      app.get("/upedboards", verifyToken, boardListController.apiGetMyUpBoards, sendWithNewTokenJSON) // 본인이 up한 게시글 목록 조회.
+      app.get("/downedboards", verifyToken, boardListController.apiGetMyDownBoards, sendWithNewTokenJSON) // 본인이 up한 게시글 목록 조회.
+      app.get("/urlboards", verifyToken, boardListController.apiGetUrlBoards, sendWithNewTokenJSON) // 같은 url의 게시글 목록 조회.
       // 검색어의 게시글 목록 조회.
       // app.get("/searchboards", verification, async (req, res, next) => {
       //       const startId = Number(req.query.sid)
@@ -89,114 +68,30 @@ DB.initialize().then(() => {
       //             res.send(JSON.stringify(result))
       //       }
       // })
-      // 게시글 등록.
-      app.post("/boardInsert", verifyToken, async (req, res) => {
-            const userKey = req.decoded.userKey
-            const contents = req.body.c
-            console.log("req body uid", req.body.uid)
-            let uid = Number(req.body.uid)
-            let title = String(req.body.t)
-            let isPublic = true
-            if (contents.length > MAX_CONTENTS_LEN) return
-            if (isNaN(uid)) uid = null
-            if (title === "") title = null
-            if (req.body.p === "") isPublic = false
-            const result = await DB.Manager.transaction(() => StatementBoard.boardInsert(userKey, contents, uid, title, isPublic))
-            if (result) res.send(true)
-      })
-      // 게시글 수정.
-      app.post("/boardUpdate", verifyToken, async (req, res) => {
-            const boardId = Number(req.query.id)
-            const userKey = req.decoded.userKey
-            const contents = req.body.c
-            if (contents.length > MAX_CONTENTS_LEN) return
-            const result = await StatementBoard.boardUpdate(boardId, userKey, contents)
-            if (result) res.send(true)
-      })
-      // 게시글 삭제.
-      app.get("/boardDelete", verifyToken, async (req, res) => {
-            const boardId = Number(req.query.id)
-            const userKey = req.decoded.userKey
-            const result = await StatementBoard.boardDelete(boardId, userKey)
-            if (result) res.send(true)
-      })
-      // 게시글 삭제.
-      app.get("/boardChangeType", verifyToken, async (req, res) => {
-            const boardId = Number(req.query.id)
-            const forPublic = Boolean(req.query.pb)
-            const userKey = req.decoded.userKey
-            const result = await StatementBoard.boardChangeType(boardId, userKey, forPublic)
-            if (result) res.send(true)
-      })
-      // 게시글 좋아요.
-      app.get("/boardReact", verifyToken, async (req, res) => {
-            const boardId = Number(req.query.id)
-            const toCancel = Boolean(req.query.cc)
-            const userKey = req.decoded.userKey
-            const result = await DB.Manager.transaction(() => StatementBoard.boardReact(boardId, userKey, toCancel))
-            if (result) res.json(result)
-      })
-      // url 좋아요.
-      app.post("/urlReact", verifyToken, async (req, res) => {
-            let urlid = Number(req.body.uid)
-            let title = String(req.body.t)
-            const toCancel = Boolean(req.body.cc)
-            const userKey = req.decoded.userKey
-            if (isNaN(urlid)) urlid = null
-            if (title === "") title = null
-            const result = await DB.Manager.transaction(() => statementUrl.UrlReact(urlid, title, userKey, toCancel))
-            if (result) res.json(result)
-      })
-      // 좋아요한 url.
-      app.get("/reactedUrls", verifyToken, async (req, res) => {
-            const startId = Number(req.query.sid)
-            const userKey = req.decoded.userKey
-            const result = await statementUrl.reactedUrls(startId, userKey)
-            if (result) res.json(result)
-      })
-      app.post("/url", verifyToken, async (req, res) => {
-            const urlname = String(req.body.u)
-            const hostname = String(req.body.h)
-            const userKey = req.decoded.userKey
-            const result = await statementUrl.getUrl(urlname, hostname, userKey)
-            if (result) res.json(result)
-      })
+
+      app.post("/boardInsert", verifyToken, boardController.apiInsertBoard, sendWithNewToken) // 게시글 등록.
+      app.post("/boardUpdate", verifyToken, boardController.apiUpdateBoard, sendWithNewToken) // 게시글 수정.
+      app.get("/boardDelete", verifyToken, boardController.apiDeleteBoard, sendWithNewToken) // 게시글 삭제.
+      app.get("/boardChangeType", verifyToken, boardController.apiChangeBoardType, sendWithNewToken) // 게시글 공개여부 설정.
+      app.get("/boardReact", verifyToken, boardController.apiReactBoard, sendWithNewTokenJSON) // 게시글 좋아요.
+      app.get("/boardGet", verifyToken, boardController.apiGetBoard, sendWithNewTokenJSON) // 게시글 가져오기.
+      app.get("/commentListGet", verifyToken, boardController.apiGetCommentList, sendWithNewTokenJSON) // 댓글 목록 가져오기.
+
+      app.post("/urlReact", verifyToken, urlController.apiUpUrl, sendWithNewTokenJSON) // url 좋아요.
+      app.get("/reactedUrls", verifyToken, urlController.apiGetUpUrls, sendWithNewTokenJSON) // 좋아요한 url.
+      app.post("/url", verifyToken, urlController.apiGetUrlInfo, sendWithNewTokenJSON)
+
+      app.post("/commentInsert", verifyToken, commentController.apiInsertComment, sendWithNewToken) // 게시글 등록.
+      app.post("/commentUpdate", verifyToken, commentController.apiUpdateComment, sendWithNewToken) // 게시글 수정.
+      app.get("/commentDelete", verifyToken, commentController.apiDeleteComment, sendWithNewToken) // 게시글 삭제.
+      app.get("/commentReact", verifyToken, commentController.apiReactComment, sendWithNewTokenJSON) // 게시글 좋아요.
+
+
+
       // 로그인 또는 계정 생성 (구글 소셜)
-      app.post("/signIn", async (req, res) => { // get 으로 하지말기
-            const token = String(req.body.t)
-            const signedMethod = String(req.body.m)
-            const result: any = await StatementUser.signIn(token, signedMethod)
-            if (result) {
-                  if (result.signed) {
-                        const token = jwt.sign({
-                              userKey: result.userKey
-                        }, process.env.JWT_SECRET, {
-                              expiresIn: "7d"
-                        })
-                        res.json({ signed: true, name: result.name, image: result.image, token })
-                  } else if (result.needSignUp) {
-                        res.json({ needSignUp: true })
-                  } else res.json({ signed: false })
-            } else res.json({ signed: false })
-      })
-      app.post("/signUp", async (req, res) => {
-            const token = String(req.body.t)
-            const name = String(req.body.n)
-            const signedMethod = String(req.body.m)
-            console.log("signUp", name, token)
-            if (name.length < 2) return
-            const result: any = await StatementUser.signUp(token, name, signedMethod)
-            if (result.signed) {
-                  const token = jwt.sign({
-                        userKey: result.userKey
-                  }, process.env.JWT_SECRET, {
-                        expiresIn: "7d"
-                  })
-                  res.json({ signed: true, name: result.name, image: result.image, token })
-            } else if (result.already_exists) {
-                  res.json({ signed: false, already_exists: true })
-            } else res.json({ signed: false })
-      })
+      app.post("/signIn", signController.apiSignIn)
+      app.post("/signUp", signController.apiSignUp)
+      app.post("/changeName", verifyToken, userController.apiChangeName, sendWithNewToken)
       // 게시글 조회.(랜더링된 화면에서)
       // app.get("/boardload", async (req, res, next) => {
       //       const boardId = Number(req.query.id)

@@ -1,7 +1,8 @@
 import Comment from "./comment"
+import HashTag from "./hashTag"
 import Url from "./url"
 import User from "./user"
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, ManyToMany, OneToMany, ManyToOne } from "typeorm"
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, ManyToMany, OneToMany, ManyToOne, JoinTable } from "typeorm"
 
 @Entity({ name: "board", schema: "brownie" })
 export default class Board {
@@ -31,16 +32,30 @@ export default class Board {
       ) //@JoinColumn()
       public comments!: Comment[]
 
-      /** 좋아요한 유저와의 관계 설정. */
+      @Column({ type: "int", unsigned: true, default: 0 })
+      public commentNum!: number
+
+      /** 업한 유저와의 관계 설정. */
       @ManyToMany(
             () => User,
-            (reactedUsers) => reactedUsers.reactedBoards,
+            (upedUsers) => upedUsers.upedBoards,
             { nullable: true },
       )
-      public reactedUsers!: User[]
+      public upedUsers!: User[]
 
       @Column({ type: "int", unsigned: true, default: 0 })
-      public reactNum!: number
+      public upNum!: number
+
+      /** 다운한 유저와의 관계 설정. */
+      @ManyToMany(
+            () => User,
+            (downedUsers) => downedUsers.downedBoards,
+            { nullable: true },
+      )
+      public downedUsers!: User[]
+
+      @Column({ type: "int", unsigned: true, default: 0 })
+      public downNum!: number
 
       /** url과 관계 설정. */
       @ManyToOne(
@@ -49,4 +64,12 @@ export default class Board {
             { nullable: true }
       )
       public url!: Url
+
+      @ManyToMany(
+            () => HashTag,
+            (hashTags) => hashTags.boards,
+            { nullable: true }
+      )
+      @JoinTable()
+      public hashTags!: HashTag[]
 }

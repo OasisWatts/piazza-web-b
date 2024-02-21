@@ -7,9 +7,12 @@
       "board": {
             "listLen": 10,
             "contentsLen": 500,
-            "tagDisplayCnt": 10,
+            "tagDisplayCnt": 20,
             "tagLenLim": 20,
-            "tagCountLim": 10
+            "tagCountLim": 20
+      },
+      "comment": {
+            "contentsLen": 500
       },
       "follow": {
             "limit": 100,

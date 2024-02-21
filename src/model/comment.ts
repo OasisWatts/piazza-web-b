@@ -1,5 +1,5 @@
 import Board from "./board"
-import { CreateDateColumn, JoinColumn } from "typeorm"
+import { CreateDateColumn, JoinColumn, OneToMany } from "typeorm"
 import User from "./user"
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, ManyToMany } from "typeorm"
 
@@ -28,14 +28,45 @@ export default class Comment {
       ) @JoinColumn()
       public board!: Board
 
-      /** 좋아요한 유저와의 관계 설정. */
-      @ManyToMany(
-            () => User,
-            (reactedUsers) => reactedUsers.reactedComments,
+      /** 답글과의 관계 설정. */
+      @OneToMany(
+            () => Comment,
+            (replies) => replies.replied,
             { nullable: true },
       )
-      public reactedUsers!: User[]
+      public replies!: Comment[]
+
+      /** 답한 댓글과 관계 설정. */
+      @ManyToOne(
+            () => Comment,
+            (replied) => replied.replies,
+            { onDelete: "CASCADE" },
+      ) @JoinColumn()
+      public replied!: Comment
 
       @Column({ type: "int", unsigned: true, default: 0 })
-      public reactNum!: number
+      public replyNum!: number
+
+
+      /** 업한 유저와의 관계 설정. */
+      @ManyToMany(
+            () => User,
+            (upedUsers) => upedUsers.upedComments,
+            { nullable: true },
+      )
+      public upedUsers!: User[]
+
+      @Column({ type: "int", unsigned: true, default: 0 })
+      public upNum!: number
+
+      /** 다운한 유저와의 관계 설정. */
+      @ManyToMany(
+            () => User,
+            (downedUsers) => downedUsers.downedComments,
+            { nullable: true },
+      )
+      public downedUsers!: User[]
+
+      @Column({ type: "int", unsigned: true, default: 0 })
+      public downNum!: number
 }
