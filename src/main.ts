@@ -6,7 +6,7 @@ import fs from "fs"
 import { sendWithNewToken, sendWithNewTokenJSON } from "database/token"
 require('dotenv').config();
 
-const boardListController = require("controller/boardList")
+const boardListController = require("controller/boardlist")
 const boardController = require("controller/board")
 const commentController = require("controller/comment")
 const urlController = require("controller/url")
