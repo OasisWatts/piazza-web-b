@@ -6,6 +6,7 @@ import { Logger } from "util/logger"
 import { ErrorCode } from "common/applicationCode"
 import { getEndIdOfList, getEndOfList } from "./board"
 import Board from "model/board"
+import { Like } from "typeorm"
 
 
 const MAX_CONTENTS_LEN = 100 // SETTINGS.board.contentsLen
@@ -27,33 +28,17 @@ async function getUrlBoards(startId: number, url: number): Promise<any[]> {
     return await DB.Manager.find(Board, { relations: { hashTags: true, url: true }, order: { id: "DESC" }, skip: startId, take: MAX_LIST_LEN, where: { url: { id: url } } })
 }
 
-// async function getSearchBoards(startId: number, userKey: number, blockeds: number[], search: string): Promise<any[]> {
-//     let whereQuery: string = (startId ? `where id < ${startId} and ` : "where ") + `contents like \"%${search}%\"`
-//     let fromQuery: string = "from \`board\`"
-//     let orderQuery = `order by id desc limit ${MAX_LIST_LEN}`
-//     let selectAndQuery = `, (select count(*) from \`user_uped_boards_board\` where userKey = ${userKey} and boardId = a.id) as reacted`
+async function getMyBoardSearch(startId: number, userKey: number, hashTag: string, keyword: string): Promise<any[]> {
+    if (hashTag) return await DB.Manager.find(Board, { relations: { hashTags: true, url: true }, order: { id: "DESC" }, skip: startId, take: MAX_LIST_LEN, where: { writer: userKey, hashTags: { text: hashTag } } })
+    else if (keyword) return await DB.Manager.find(Board, { relations: { hashTags: true, url: true }, order: { id: "DESC" }, skip: startId, take: MAX_LIST_LEN, where: [{ writer: userKey, hashTags: { text: keyword } }, { writer: userKey, contents: Like(`%${keyword}%`) }] })
+    return []
+}
 
-//     const bList = await DB.Manager.query(
-//         `select *, (select count(id) from \`comment\` where boardId = a.id) as comNum ${selectAndQuery}
-//                               from ( select id ${fromQuery} ${whereQuery} ${orderQuery}
-//                               ) b join \`board\` a on b.id = a.id;`,
-//     ).catch((err) => Logger.errorApp(ErrorCode.board_find_failed).put("getSearchBoards").put(err).out())  // 차단 대상 제외.
-//     let bListFiltered = bList.filter((b: any) => !blockeds.includes(b.writer))
-//     return bListFiltered.sort((b1, b2) => b2.reactNum - b1.reactNum)
-// }
-// async function getUserBoards(startId: number, userKey: number, searchUser: number): Promise<any[]> {
-//     let whereQuery: string = (startId ? `where id < ${startId} and ` : "where ") + `writer = ${searchUser}`
-//     let fromQuery: string = "from \`board\`"
-//     let orderQuery = `order by id desc limit ${MAX_LIST_LEN}`
-//     let selectAndQuery = `, (select count(*) from \`user_uped_boards_board\` where userKey = ${userKey} and boardId = a.id) as reacted`
-//     const bList = await DB.Manager.query(
-//         `select *, (select count(id) from \`comment\` where boardId = a.id) as comNum ${selectAndQuery}
-//                               from ( select id ${fromQuery} ${whereQuery} ${orderQuery}
-//                               ) b join \`board\` a on b.id = a.id;`,
-//     ).catch((err) => Logger.errorApp(ErrorCode.board_find_failed).put("getUserBoards").put(err).out())  // 차단 대상 제외.
-//     console.log("bList", bList)
-//     return bList.sort((b1, b2) => b2.reactNum - b1.reactNum)
-// }
+async function getMyUpSearch(startId: number, userKey: number, hashTag: string, keyword: string): Promise<any[]> {
+    if (hashTag) return await DB.Manager.find(Board, { relations: { hashTags: true, url: true }, order: { id: "DESC" }, skip: startId, take: MAX_LIST_LEN, where: { upedUsers: { key: userKey }, hashTags: { text: hashTag } } })
+    else if (keyword) return await DB.Manager.find(Board, { relations: { hashTags: true, url: true }, order: { id: "DESC" }, skip: startId, take: MAX_LIST_LEN, where: [{ upedUsers: { key: userKey }, hashTags: { text: keyword } }, { upedUsers: { key: userKey }, contents: Like(`%${keyword}%`) }] })
+    return []
+}
 
 async function getUpedAndDowned(bList: Board[], userKey: number) {
     const promises = []
@@ -200,5 +185,42 @@ exports.apiGetUrlBoards = async (req, res, next) => {
         next()
     } catch (err) {
         Logger.errorApp(ErrorCode.api_failed).put("apiGetUrlBoards").put(err).out()
+    }
+}
+
+exports.apiGetMyBoardSearch = async (req, res, next) => {
+    try {
+        const startId = Number(req.query.sid)
+        const userKey = req.decoded.userKey
+        const hashTag = req.query.ht
+        const keyword = req.query.kw
+        console.log(hashTag, keyword)
+        const bList = await getMyBoardSearch(startId, userKey, hashTag, keyword)
+        console.log("bl", bList)
+        const endId = await getEndIdOfList(bList, startId)
+        const end = await getEndOfList(bList)
+        const bInfoList = await getAllBoardInfos(bList)
+        req.result = { boardList: bInfoList, end, endId }
+        next()
+    } catch (err) {
+        Logger.errorApp(ErrorCode.api_failed).put("apiGetMyBoardSearch").put(err).out()
+    }
+}
+
+exports.apiGetMyUpSearch = async (req, res, next) => {
+    try {
+        const startId = Number(req.query.sid)
+        const userKey = req.decoded.userKey
+        const hashTag = req.query.ht
+        const keyword = req.query.kw
+        const bList = await getMyUpSearch(startId, userKey, hashTag, keyword)
+        const endId = await getEndIdOfList(bList, startId)
+        const end = await getEndOfList(bList)
+        const bListWithUpedAndDowned = await getUpedAndDowned(bList, userKey)
+        const bInfoList = await getAllBoardInfos(bListWithUpedAndDowned)
+        req.result = { boardList: bInfoList, end, endId }
+        next()
+    } catch (err) {
+        Logger.errorApp(ErrorCode.api_failed).put("apiGetMyUpSearch").put(err).out()
     }
 }

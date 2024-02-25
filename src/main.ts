@@ -12,6 +12,7 @@ const commentController = require("controller/comment")
 const urlController = require("controller/url")
 const signController = require("controller/sign")
 const userController = require("controller/user")
+const hashTagController = require("controller/hashTag")
 
 const { verifyToken } = require("database/token")
 const app = express()
@@ -48,6 +49,13 @@ DB.initialize().then(() => {
       app.get("/upedboards", verifyToken, boardListController.apiGetMyUpBoards, sendWithNewTokenJSON) // 본인이 up한 게시글 목록 조회.
       app.get("/downedboards", verifyToken, boardListController.apiGetMyDownBoards, sendWithNewTokenJSON) // 본인이 up한 게시글 목록 조회.
       app.get("/urlboards", verifyToken, boardListController.apiGetUrlBoards, sendWithNewTokenJSON) // 같은 url의 게시글 목록 조회.
+      app.get("/myboardsearch", verifyToken, boardListController.apiGetMyBoardSearch, sendWithNewTokenJSON) // 같은 url의 게시글 목록 조회.
+      app.get("/upedboardsearch", verifyToken, boardListController.apiGetMyUpSearch, sendWithNewTokenJSON) // 같은 url의 게시글 목록 조회.
+
+
+
+      app.get("/hashTags", verifyToken, hashTagController.apiGetHashTag, sendWithNewTokenJSON)
+
       // 검색어의 게시글 목록 조회.
       // app.get("/searchboards", verification, async (req, res, next) => {
       //       const startId = Number(req.query.sid)
@@ -74,8 +82,6 @@ DB.initialize().then(() => {
       app.get("/boardDelete", verifyToken, boardController.apiDeleteBoard, sendWithNewToken) // 게시글 삭제.
       app.get("/boardChangeType", verifyToken, boardController.apiChangeBoardType, sendWithNewToken) // 게시글 공개여부 설정.
       app.get("/boardReact", verifyToken, boardController.apiReactBoard, sendWithNewTokenJSON) // 게시글 좋아요.
-      app.get("/boardGet", verifyToken, boardController.apiGetBoard, sendWithNewTokenJSON) // 게시글 가져오기.
-      app.get("/commentListGet", verifyToken, boardController.apiGetCommentList, sendWithNewTokenJSON) // 댓글 목록 가져오기.
 
       app.post("/urlReact", verifyToken, urlController.apiUpUrl, sendWithNewTokenJSON) // url 좋아요.
       app.get("/reactedUrls", verifyToken, urlController.apiGetUpUrls, sendWithNewTokenJSON) // 좋아요한 url.
@@ -85,6 +91,8 @@ DB.initialize().then(() => {
       app.post("/commentUpdate", verifyToken, commentController.apiUpdateComment, sendWithNewToken) // 게시글 수정.
       app.get("/commentDelete", verifyToken, commentController.apiDeleteComment, sendWithNewToken) // 게시글 삭제.
       app.get("/commentReact", verifyToken, commentController.apiReactComment, sendWithNewTokenJSON) // 게시글 좋아요.
+      app.get("/commentListGet", verifyToken, commentController.apiGetCommentList, sendWithNewTokenJSON) // 댓글 목록 가져오기.
+      app.get("/replyListGet", verifyToken, commentController.apiGetReplyList, sendWithNewTokenJSON) // 답글 목록 가져오기.
 
 
 
@@ -92,6 +100,7 @@ DB.initialize().then(() => {
       app.post("/signIn", signController.apiSignIn)
       app.post("/signUp", signController.apiSignUp)
       app.post("/changeName", verifyToken, userController.apiChangeName, sendWithNewToken)
+      app.get("/deleteAccount", verifyToken, userController.apiDeleteAccount, sendWithNewToken)
       // 게시글 조회.(랜더링된 화면에서)
       // app.get("/boardload", async (req, res, next) => {
       //       const boardId = Number(req.query.id)

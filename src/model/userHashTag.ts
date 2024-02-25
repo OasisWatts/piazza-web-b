@@ -14,14 +14,14 @@ export default class UserHashTag {
       @ManyToOne(
             () => User,
             (user) => user.usedHashTags,
-            { nullable: true }
+            { nullable: true, onDelete: "CASCADE" }
       )
       public user!: User
 
       @ManyToOne(
             () => HashTag,
             (hashTag) => hashTag.userHashTags,
-            { nullable: true }
+            { nullable: true, onDelete: "CASCADE" }
       )
       public hashTag: HashTag
 }

@@ -4,9 +4,13 @@ import { Logger } from "util/logger"
 import Comment from "model/comment"
 import { SETTINGS } from "util/setting"
 import Board from "model/board"
+import User from "model/user"
+import { reduceToTable } from "util/utility"
+import { getEndIdOfListInorder, getEndOfList } from "./board"
 
 
 const MAX_CONTENTS_LEN = SETTINGS.comment.contentsLen
+const MAX_LIST_LEN = SETTINGS.board.listLen
 
 /**
 * 댓글 생성.
@@ -298,6 +302,163 @@ async function reactComment(commentId: number, userKey: number, up: boolean, dow
     } return null
 }
 
+async function getReplyListByStartId(commentId: number, replyStartId: number) {
+    const commentList = await DB.Manager.find(Comment, { order: { id: "DESC" }, skip: replyStartId, take: MAX_LIST_LEN, where: { replied: { id: commentId } } })
+    const promises = []
+    for (let commentIdx in commentList) {
+        promises.push(
+            new Promise(async (resolve, reject) => {
+                try {
+                    const replyList = await DB.Manager.find(Comment, { where: { replied: { id: commentList[commentIdx].id } }, take: 2, order: { upNum: "DESC" } })
+                    commentList[commentIdx].replies = replyList
+                    resolve(true)
+                } catch (err) {
+                    Logger.errorApp(ErrorCode.comment_find_failed).put("getReplyListByStartId").put(err).out()
+                    reject(err)
+                }
+            })
+        )
+    }
+    await Promise.all(promises)
+    return commentList
+}
+
+async function getCommentListByStartId(boardId: number, commentStartId: number) {
+    console.log("get comment list by start id")
+    const commentList = await DB.Manager.find(Comment, { order: { id: "DESC" }, skip: commentStartId, take: MAX_LIST_LEN, where: { id: boardId } })
+    const promises = []
+    for (let commentIdx in commentList) {
+        promises.push(
+            new Promise(async (resolve, reject) => {
+                try {
+                    const replyList = await DB.Manager.find(Comment, { where: { replied: { id: commentList[commentIdx].id } }, take: 2, order: { upNum: "DESC" } })
+                    commentList[commentIdx].replies = replyList
+                    resolve(true)
+                } catch (err) {
+                    Logger.errorApp(ErrorCode.comment_find_failed).put("getCommentListByStartId").put(err).out()
+                    reject(err)
+                }
+            })
+        )
+    }
+    await Promise.all(promises)
+    return commentList
+}
+
+async function getUpedAndDowned(commentList: Comment[], userKey: number) {
+    const promises = []
+    for (const commentIdx in commentList) {
+        promises.push(
+            new Promise(async (resolve, reject) => {
+                try {
+                    const isUped = await DB.Manager.findOne(Comment, { where: { id: commentList[commentIdx].id, upedUsers: { key: userKey } } })
+                    if (isUped) commentList[commentIdx]["uped"] = true
+                    else commentList[commentIdx]["uped"] = false
+                    resolve(true)
+                } catch (err) {
+                    Logger.errorApp(ErrorCode.board_find_failed).put("getUpedAndDowned").put(err).out()
+                    reject(err)
+                }
+            })
+        )
+        promises.push(
+            new Promise(async (resolve, reject) => {
+                try {
+                    const isDowned = await DB.Manager.findOne(Comment, { where: { id: commentList[commentIdx].id, downedUsers: { key: userKey } } })
+                    if (isDowned) commentList[commentIdx]["downed"] = true
+                    else commentList[commentIdx]["downed"] = false
+                    resolve(true)
+                } catch (err) {
+                    Logger.errorApp(ErrorCode.board_find_failed).put("getUpedAndDowned").put(err).out()
+                    reject(err)
+                }
+            })
+        )
+        for (const replyIdx in commentList[commentIdx].replies) {
+            promises.push(
+                new Promise(async (resolve, reject) => {
+                    try {
+                        const isUped = await DB.Manager.findOne(Comment, { where: { id: commentList[commentIdx].replies[replyIdx].id, upedUsers: { key: userKey } } })
+                        if (isUped) commentList[commentIdx]["uped"] = true
+                        else commentList[commentIdx]["uped"] = false
+                        resolve(true)
+                    } catch (err) {
+                        Logger.errorApp(ErrorCode.board_find_failed).put("getUpedAndDowned").put(err).out()
+                        reject(err)
+                    }
+                })
+            )
+            promises.push(
+                new Promise(async (resolve, reject) => {
+                    try {
+                        const isDowned = await DB.Manager.findOne(Comment, { where: { id: commentList[commentIdx].replies[replyIdx].id, downedUsers: { key: userKey } } })
+                        if (isDowned) commentList[commentIdx]["downed"] = true
+                        else commentList[commentIdx]["downed"] = false
+                        resolve(true)
+                    } catch (err) {
+                        Logger.errorApp(ErrorCode.board_find_failed).put("getUpedAndDowned").put(err).out()
+                        reject(err)
+                    }
+                })
+            )
+        }
+    }
+    await Promise.all(promises)
+    return commentList
+}
+
+async function getCommentListInfoByStartId(commentList: any[]) {
+    const userWhere: { key: number }[] = []
+    for (const comment of commentList) {
+        userWhere.push({
+            key: comment.writer
+        })
+        for (const reply of comment.replies) {
+            userWhere.push({
+                key: reply.writer
+            })
+        }
+    }
+    const users = await DB.Manager.find(User, {
+        where: userWhere
+    })
+    const userTable = reduceToTable(users, (v) => v, (v) => v.key)
+    const commentInfoList = []
+    for (const comment of commentList) {
+        const user = userTable[comment.writer]
+        const commentInfo = {
+            id: comment.id,
+            date: comment.date,
+            contents: comment.contents.slice(0, MAX_CONTENTS_LEN),
+            upNum: comment.upNum,
+            downNum: comment.downNum,
+            replyNum: comment.replyNum,
+            uped: comment.uped,
+            downed: comment.downed,
+            updated: comment.updated,
+            writer: user.name,
+            replies: []
+        }
+        for (const reply of comment.replies) {
+            const user = userTable[reply.wirter]
+            commentInfo.replies.push({
+                id: reply.id,
+                date: reply.date,
+                contents: reply.contents.slice(0, MAX_CONTENTS_LEN),
+                upNum: reply.upNum,
+                downNum: reply.downNum,
+                replyNum: reply.replyNum,
+                uped: reply.uped,
+                downed: reply.downed,
+                updated: reply.updated,
+                writer: user.name
+            })
+        }
+        commentInfoList.push(commentInfo)
+    }
+    return commentInfoList
+}
+
 exports.apiInsertComment = async (req, res, next) => {
     try {
         const userKey = req.decoded.userKey
@@ -361,5 +522,42 @@ exports.apiReactComment = async (req, res, next) => {
         }
     } catch (err) {
         Logger.errorApp(ErrorCode.api_failed).put("apiUpComment").put(err).out()
+    }
+}
+
+
+exports.apiGetCommentList = async (req, res, next) => {
+    try {
+        console.log("api get comment list")
+        const startId = Number(req.query.sid)
+        const userKey = req.decoded.userKey
+        const boardId = req.query.bid
+        const commentList = await getCommentListByStartId(boardId, startId)
+        const endId = await getEndIdOfListInorder(commentList, startId)
+        const end = await getEndOfList(commentList)
+        const commentListUpedAndDowned = await getUpedAndDowned(commentList, userKey)
+        const cInfoList = await getCommentListInfoByStartId(commentListUpedAndDowned)
+        req.result = { commentList: cInfoList, end, endId }
+        next()
+    } catch (err) {
+        Logger.errorApp(ErrorCode.api_failed).put("apiGetCommentList").put(err).out()
+    }
+}
+
+exports.apiGetReplyList = async (req, res, next) => {
+    try {
+        console.log("api get reply list")
+        const startId = Number(req.query.sid)
+        const userKey = req.decoded.userKey
+        const boardId = req.query.bid
+        const commentList = await getReplyListByStartId(boardId, startId)
+        const endId = await getEndIdOfListInorder(commentList, startId)
+        const end = await getEndOfList(commentList)
+        const commentListUpedAndDowned = await getUpedAndDowned(commentList, userKey)
+        const cInfoList = await getCommentListInfoByStartId(commentListUpedAndDowned)
+        req.result = { commentList: cInfoList, end, endId }
+        next()
+    } catch (err) {
+        Logger.errorApp(ErrorCode.api_failed).put("apiGetReplyList").put(err).out()
     }
 }

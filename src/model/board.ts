@@ -61,7 +61,7 @@ export default class Board {
       @ManyToOne(
             () => Url,
             (url) => url.boards,
-            { nullable: true }
+            { nullable: true, onDelete: "CASCADE" }
       )
       public url!: Url
 

@@ -25,7 +25,7 @@ export default class Comment {
             () => Board,
             (board) => board.comments,
             { onDelete: "CASCADE" },
-      ) @JoinColumn()
+      )
       public board!: Board
 
       /** 답글과의 관계 설정. */
@@ -43,6 +43,7 @@ export default class Comment {
             { onDelete: "CASCADE" },
       ) @JoinColumn()
       public replied!: Comment
+
 
       @Column({ type: "int", unsigned: true, default: 0 })
       public replyNum!: number

@@ -5,13 +5,12 @@ import { ErrorCode } from "common/applicationCode"
 import Url from "model/url"
 import { SETTINGS } from "util/setting"
 import User from "model/user"
-import { reduceToTable } from "util/utility"
 import HashTag from "model/hashTag"
 import UserHashTag from "model/userHashTag"
 
 const MAX_CONTENTS_LEN = SETTINGS.board.contentsLen
-const MAX_LIST_LEN = SETTINGS.board.listLen
 const MAX_HASH_TAG_LEN = SETTINGS.board.tagLenLim
+const MAX_LIST_LEN = SETTINGS.board.listLen
 
 /**
  * 게시글 생성.
@@ -443,136 +442,6 @@ async function reactBoard(boardId: number, userKey: number, up: boolean, down: b
     } return null
 }
 
-async function getBoard(boardId: number, userKey: number) {
-    let whereQuery: string = `where id = ${boardId}`
-    let fromQuery: string = "from `board`"
-    let selectAndQuery = `, (select count(*) from \`user_uped_boards_board\` where userKey = ${userKey} and boardId = ${boardId}) as uped, (select count(*) from \`user_downed_boards_board\` where userKey = ${userKey} and boardId = ${boardId}) as downed`
-
-    const boards = await DB.Manager.query(
-        `select *, ${selectAndQuery} ${fromQuery} ${whereQuery};`,
-    ).catch((err) => Logger.errorApp(ErrorCode.board_find_failed).put("getBoard").put(err).out())  // 차단 대상 제외.
-    return boards[0]
-}
-
-async function getCommentList(boardId: number, userKey: number) {
-    const commentList = await DB.Manager.query(
-        `select comment.id, comment.contents, comment.upNum, comment.downNum, comment.replyNum, comment.writer, comment.date
-, (select count(*) from \`user_uped_comments_comment\` where userKey = ${userKey} and commentId = comment.id) as uped
-, (select count(*) from \`user_downed_comments_comment\` where userKey = ${userKey} and commentId = comment.id) as downed
-from (
-      select id
-      from \`board\`
-      where board.id = ${boardId}
-) board left join \`comment\` comment on board.id = comment.boardId order by comment.id desc limit ${MAX_LIST_LEN};`
-    ).catch((err) => Logger.errorApp(ErrorCode.comment_unfound).put("getCommentList").put(err).out())
-    return commentList
-}
-
-async function getCommentListByStartId(boardId: number, userKey: number, commentStartId: number) {
-    const commentList = await DB.Manager.query(
-        `select comment.id, comment.contents, comment.upNum, comment.downNum, comment.replyNum, comment.writer, comment.date
-, (select count(*) from \`user_uped_comments_comment\` where userKey = ${userKey} and commentId = comment.id) as uped
-, (select count(*) from \`user_downed_comments_comment\` where userKey = ${userKey} and commentId = comment.id) as downed
-from (
-      select id
-      from \`board\`
-      where board.id = ${boardId}
-) board left join \`comment\` comment on board.id = comment.boardId where ${commentStartId ? `comment.id < ${commentStartId}` : ""} order by comment.id desc limit ${MAX_LIST_LEN};`
-    ).catch((err) => Logger.errorApp(ErrorCode.comment_unfound).put("getCommentListByStartId").put(err).out())
-    return commentList
-}
-
-
-async function getBoardAndCommentListInfo(boardId: number, userKey: number, commentList: any[]) {
-    const board = await getBoard(boardId, userKey)
-    if (!board) return null
-    const boardWriter = await DB.Manager.findOne(User, { where: { key: board.writer } })
-    if (!boardWriter) return null
-    const url = await DB.Manager.findOne(Url, { where: board.urlId })
-    const boardInfo = {
-        id: board.id,
-        writer: boardWriter.name,
-        url: url?.url,
-        urlHostname: url?.hostname,
-        urlTitle: url?.title,
-        urlBoardNum: url?.boardNum,
-        urlReactNum: url?.reactNum,
-        contents: board.contents.slice(0, MAX_CONTENTS_LEN),
-        comments: [],
-        commentNum: board.comNum,
-        date: String(board.date),
-        upNum: board.upNum,
-        downNum: board.downNum,
-        uped: board.uped,
-        downed: board.downed,
-        updated: board.updated,
-        isPublic: board.isPublic
-    }
-    if (commentList.length == 0) {
-        return boardInfo
-    } else {
-        const userWhere: { key: number }[] = []
-        for (const comment of commentList) {
-            userWhere.push({
-                key: comment.writer
-            })
-        }
-        const users = await DB.Manager.find(User, {
-            where: userWhere
-        })
-        const userTable = reduceToTable(users, (v) => v, (v) => v.key)
-        const commentInfoList = []
-        for (const comment of commentList) {
-            const user = userTable[comment.writer]
-            commentInfoList.push({
-                id: comment.id,
-                date: comment.date,
-                contents: comment.contents.slice(0, MAX_CONTENTS_LEN),
-                upNum: comment.upNum,
-                downNum: comment.downNum,
-                replyNum: comment.replyNum,
-                repliedId: comment.repliedId,
-                uped: comment.uped,
-                downed: comment.downed,
-                updated: comment.updated,
-                writer: user.name
-            })
-        }
-        boardInfo.comments = commentInfoList
-        return boardInfo
-    }
-}
-
-async function getCommentListInfoByStartId(boardId: number, userKey: number, commentStartId: number, commentList: any[]) {
-    const userWhere: { key: number }[] = []
-    for (const comment of commentList) {
-        userWhere.push({
-            key: comment.writer
-        })
-    }
-    const users = await DB.Manager.find(User, {
-        where: userWhere
-    })
-    const userTable = reduceToTable(users, (v) => v, (v) => v.key)
-    const commentInfoList = []
-    for (const comment of commentList) {
-        const user = userTable[comment.writer]
-        commentInfoList.push({
-            id: comment.id,
-            date: comment.date,
-            contents: comment.contents.slice(0, MAX_CONTENTS_LEN),
-            upNum: comment.upNum,
-            downNum: comment.downNum,
-            replyNum: comment.replyNum,
-            repliedId: comment.repliedId,
-            uped: comment.uped,
-            downed: comment.downed,
-            updated: comment.updated,
-            writer: user.name
-        })
-    }
-    return commentInfoList
-}
 
 export async function getEndOfList(list) {
     let endOfList = list.length < MAX_LIST_LEN ? true : false
@@ -668,36 +537,5 @@ exports.apiReactBoard = async (req, res, next) => {
         }
     } catch (err) {
         Logger.errorApp(ErrorCode.api_failed).put("apiUpBoard").put(err).out()
-    }
-}
-
-exports.apiGetBoard = async (req, res, next) => {
-    try {
-        const userKey = req.decoded.userKey
-        const boardId = Number(req.query.bid)
-        const commentList = await getCommentList(boardId, userKey)
-        const endId = await getEndIdOfListInorder(commentList, 0)
-        const end = await getEndOfList(commentList)
-        const boardInfo = await getBoardAndCommentListInfo(boardId, userKey, commentList)
-        req.result = { boardInfo, end, endId }
-        next()
-    } catch (err) {
-        Logger.errorApp(ErrorCode.api_failed).put("apiGetBoard").put(err).out()
-    }
-}
-
-exports.apiGetCommentList = async (req, res, next) => {
-    try {
-        const startId = Number(req.query.sid)
-        const userKey = req.decoded.userKey
-        const boardId = req.query.bid
-        const commentList = await getCommentListByStartId(boardId, userKey, startId)
-        const endId = await getEndIdOfListInorder(commentList, startId)
-        const end = await getEndOfList(commentList)
-        const cInfoList = await getCommentListInfoByStartId(boardId, userKey, startId, commentList)
-        req.result = { commentInfoList: cInfoList, end, endId }
-        next()
-    } catch (err) {
-        Logger.errorApp(ErrorCode.api_failed).put("apiGetCommentList").put(err).out()
     }
 }
