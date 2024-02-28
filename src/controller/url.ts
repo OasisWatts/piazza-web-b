@@ -16,7 +16,7 @@ async function UrlReact(urlid: number, title: string, userKey: number, toCancel:
     console.log("urlReact", toCancel, urlid)
     let url_ = await DB.Manager.findOne(Url, { where: { id: urlid } })
     if (url_) {
-        DB.Manager.update(Url, { id: urlid }, { title: title })
+        if (title) DB.Manager.update(Url, { id: urlid }, { title: title })
 
         console.log("url_", url_)
         const reacted = await DB.Manager.query(`select * from \`user_reacted_urls_url\` where userKey=${userKey} and urlId=${url_.id}`)

@@ -4,10 +4,10 @@ import UserHashTag from "model/userHashTag";
 import { Logger } from "util/logger";
 import { SETTINGS } from "util/setting";
 
-const MAX_HASH_TAG_DISPLAY = SETTINGS.board.tagDisplayCnt
+const MAX_HASH_TAG_NUM = SETTINGS.board.tagCountLim
 
 async function getFrequentlyUsedHashTags(userKey: number) {
-    const userHashTags = await DB.Manager.find(UserHashTag, { relations: ["hashTag"], where: { user: { key: userKey } }, order: { count: "DESC" }, take: MAX_HASH_TAG_DISPLAY });
+    const userHashTags = await DB.Manager.find(UserHashTag, { relations: ["hashTag"], where: { user: { key: userKey } }, order: { count: "DESC" }, take: MAX_HASH_TAG_NUM });
     console.log("uh", userHashTags)
     return userHashTags.map((u) => ({ text: u.hashTag.text }))
 }

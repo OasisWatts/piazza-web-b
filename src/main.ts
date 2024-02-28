@@ -52,30 +52,7 @@ DB.initialize().then(() => {
       app.get("/myboardsearch", verifyToken, boardListController.apiGetMyBoardSearch, sendWithNewTokenJSON) // 같은 url의 게시글 목록 조회.
       app.get("/upedboardsearch", verifyToken, boardListController.apiGetMyUpSearch, sendWithNewTokenJSON) // 같은 url의 게시글 목록 조회.
 
-
-
       app.get("/hashTags", verifyToken, hashTagController.apiGetHashTag, sendWithNewTokenJSON)
-
-      // 검색어의 게시글 목록 조회.
-      // app.get("/searchboards", verification, async (req, res, next) => {
-      //       const startId = Number(req.query.sid)
-      //       const search = String(req.query.s)
-      //       const userKey = req.decoded.userKey
-      //       else {
-      //             const result = await StatementBoard.boardList(startId, BOARD_CATEGORY.searchBoards, userKey, undefined, search)
-      //             res.send(JSON.stringify(result))
-      //       }
-      // })
-      // // 유저의 게시글 목록 조회.
-      // app.get("/userboards", verification, async (req, res, next) => {
-      //       const startId = Number(req.query.sid)
-      //       const searchUser = Number(req.query.u)
-      //       const userKey = req.decoded.userKey
-      //       else {
-      //             const result = await StatementBoard.boardList(startId, BOARD_CATEGORY.userBoards, userKey, undefined, undefined, searchUser)
-      //             res.send(JSON.stringify(result))
-      //       }
-      // })
 
       app.post("/boardInsert", verifyToken, boardController.apiInsertBoard, sendWithNewToken) // 게시글 등록.
       app.post("/boardUpdate", verifyToken, boardController.apiUpdateBoard, sendWithNewToken) // 게시글 수정.
@@ -87,32 +64,19 @@ DB.initialize().then(() => {
       app.get("/reactedUrls", verifyToken, urlController.apiGetUpUrls, sendWithNewTokenJSON) // 좋아요한 url.
       app.post("/url", verifyToken, urlController.apiGetUrlInfo, sendWithNewTokenJSON)
 
-      app.post("/commentInsert", verifyToken, commentController.apiInsertComment, sendWithNewToken) // 게시글 등록.
-      app.post("/commentUpdate", verifyToken, commentController.apiUpdateComment, sendWithNewToken) // 게시글 수정.
-      app.get("/commentDelete", verifyToken, commentController.apiDeleteComment, sendWithNewToken) // 게시글 삭제.
-      app.get("/commentReact", verifyToken, commentController.apiReactComment, sendWithNewTokenJSON) // 게시글 좋아요.
+      app.post("/commentInsert", verifyToken, commentController.apiInsertComment, sendWithNewTokenJSON) // 댓글 등록.
+      app.post("/commentUpdate", verifyToken, commentController.apiUpdateComment, sendWithNewToken) // 댓글 수정.
+      app.get("/commentDelete", verifyToken, commentController.apiDeleteComment, sendWithNewToken) // 댓글 삭제.
+      app.get("/commentReact", verifyToken, commentController.apiReactComment, sendWithNewTokenJSON) // 댓글 좋아요.
       app.get("/commentListGet", verifyToken, commentController.apiGetCommentList, sendWithNewTokenJSON) // 댓글 목록 가져오기.
       app.get("/replyListGet", verifyToken, commentController.apiGetReplyList, sendWithNewTokenJSON) // 답글 목록 가져오기.
+      app.post("/replyInsert", verifyToken, commentController.apiInsertReply, sendWithNewTokenJSON) // 답글 등록.
 
-
-
-      // 로그인 또는 계정 생성 (구글 소셜)
       app.post("/signIn", signController.apiSignIn)
       app.post("/signUp", signController.apiSignUp)
       app.post("/changeName", verifyToken, userController.apiChangeName, sendWithNewToken)
       app.get("/deleteAccount", verifyToken, userController.apiDeleteAccount, sendWithNewToken)
-      // 게시글 조회.(랜더링된 화면에서)
-      // app.get("/boardload", async (req, res, next) => {
-      //       const boardId = Number(req.query.id)
-      //       const userKey = req.decoded.userKey
-      //       else {
-      //             const board = await StatementBoard.boardSelect(boardId, userKey)
-      //             res.send(JSON.stringify(board))
-      //       }
-      // })
-      // app.get("/*", async (req, res, next) => {
-      //       res.send("hi")
-      // })
+
       if (!CLOTHES.development && SETTINGS.https) {
             const ssl_options = SETTINGS.https && ({
                   cert: fs.readFileSync(SETTINGS.https.cert),

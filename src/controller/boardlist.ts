@@ -6,38 +6,51 @@ import { Logger } from "util/logger"
 import { ErrorCode } from "common/applicationCode"
 import { getEndIdOfList, getEndOfList } from "./board"
 import Board from "model/board"
-import { Like } from "typeorm"
+import { LessThan, Like } from "typeorm"
 
 
 const MAX_CONTENTS_LEN = 100 // SETTINGS.board.contentsLen
 const MAX_LIST_LEN = SETTINGS.board.listLen
 
 async function getMyBoards(startId: number, userKey: number): Promise<any[]> {
-    return await DB.Manager.find(Board, { relations: { hashTags: true, url: true }, order: { id: "DESC" }, skip: startId, take: MAX_LIST_LEN, where: { writer: userKey } })
+    if (startId == 0) return await DB.Manager.find(Board, { relations: { hashTags: true, url: true }, order: { id: "DESC" }, take: MAX_LIST_LEN, where: { writer: userKey } })
+    return await DB.Manager.find(Board, { relations: { hashTags: true, url: true }, order: { id: "DESC" }, take: MAX_LIST_LEN, where: { writer: userKey, id: LessThan(startId) } })
 }
 
 async function getMyUpBoards(startId: number, userKey: number): Promise<any[]> {
-    return await DB.Manager.find(Board, { relations: { hashTags: true, url: true }, order: { id: "DESC" }, skip: startId, take: MAX_LIST_LEN, where: { upedUsers: { key: userKey } } })
+    if (startId == 0) return await DB.Manager.find(Board, { relations: { hashTags: true, url: true }, order: { id: "DESC" }, take: MAX_LIST_LEN, where: { upedUsers: { key: userKey } } })
+    return await DB.Manager.find(Board, { relations: { hashTags: true, url: true }, order: { id: "DESC" }, take: MAX_LIST_LEN, where: { upedUsers: { key: userKey }, id: LessThan(startId) } })
 }
 
 async function getMyDownBoards(startId: number, userKey: number): Promise<any[]> {
-    return await DB.Manager.find(Board, { relations: { hashTags: true, url: true }, order: { id: "DESC" }, skip: startId, take: MAX_LIST_LEN, where: { downedUsers: { key: userKey } } })
+    if (startId == 0) return await DB.Manager.find(Board, { relations: { hashTags: true, url: true }, order: { id: "DESC" }, take: MAX_LIST_LEN, where: { downedUsers: { key: userKey } } })
+    return await DB.Manager.find(Board, { relations: { hashTags: true, url: true }, order: { id: "DESC" }, take: MAX_LIST_LEN, where: { downedUsers: { key: userKey }, id: LessThan(startId) } })
 }
 
 async function getUrlBoards(startId: number, url: number): Promise<any[]> {
-    return await DB.Manager.find(Board, { relations: { hashTags: true, url: true }, order: { id: "DESC" }, skip: startId, take: MAX_LIST_LEN, where: { url: { id: url } } })
+    if (startId == 0) return await DB.Manager.find(Board, { relations: { hashTags: true, url: true }, order: { id: "DESC" }, take: MAX_LIST_LEN, where: { url: { id: url }, isPublic: true } })
+    return await DB.Manager.find(Board, { relations: { hashTags: true, url: true }, order: { id: "DESC" }, take: MAX_LIST_LEN, where: { url: { id: url }, isPublic: true, id: LessThan(startId) } })
 }
 
 async function getMyBoardSearch(startId: number, userKey: number, hashTag: string, keyword: string): Promise<any[]> {
-    if (hashTag) return await DB.Manager.find(Board, { relations: { hashTags: true, url: true }, order: { id: "DESC" }, skip: startId, take: MAX_LIST_LEN, where: { writer: userKey, hashTags: { text: hashTag } } })
-    else if (keyword) return await DB.Manager.find(Board, { relations: { hashTags: true, url: true }, order: { id: "DESC" }, skip: startId, take: MAX_LIST_LEN, where: [{ writer: userKey, hashTags: { text: keyword } }, { writer: userKey, contents: Like(`%${keyword}%`) }] })
+    if (hashTag) {
+        if (startId == 0) return await DB.Manager.find(Board, { relations: { hashTags: true, url: true }, order: { id: "DESC" }, take: MAX_LIST_LEN, where: { writer: userKey, hashTags: { text: hashTag } } })
+        else return await DB.Manager.find(Board, { relations: { hashTags: true, url: true }, order: { id: "DESC" }, take: MAX_LIST_LEN, where: { writer: userKey, hashTags: { text: hashTag }, id: LessThan(startId) } })
+    } else if (keyword) {
+        if (startId == 0) return await DB.Manager.find(Board, { relations: { hashTags: true, url: true }, order: { id: "DESC" }, take: MAX_LIST_LEN, where: [{ writer: userKey, hashTags: { text: keyword } }, { writer: userKey, contents: Like(`%${keyword}%`) }] })
+        else return await DB.Manager.find(Board, { relations: { hashTags: true, url: true }, order: { id: "DESC" }, take: MAX_LIST_LEN, where: [{ writer: userKey, hashTags: { text: keyword }, id: LessThan(startId) }, { writer: userKey, contents: Like(`%${keyword}%`), id: LessThan(startId) }] })
+    }
     return []
 }
 
 async function getMyUpSearch(startId: number, userKey: number, hashTag: string, keyword: string): Promise<any[]> {
-    if (hashTag) return await DB.Manager.find(Board, { relations: { hashTags: true, url: true }, order: { id: "DESC" }, skip: startId, take: MAX_LIST_LEN, where: { upedUsers: { key: userKey }, hashTags: { text: hashTag } } })
-    else if (keyword) return await DB.Manager.find(Board, { relations: { hashTags: true, url: true }, order: { id: "DESC" }, skip: startId, take: MAX_LIST_LEN, where: [{ upedUsers: { key: userKey }, hashTags: { text: keyword } }, { upedUsers: { key: userKey }, contents: Like(`%${keyword}%`) }] })
-    return []
+    if (hashTag) {
+        if (startId == 0) return await DB.Manager.find(Board, { relations: { hashTags: true, url: true }, order: { id: "DESC" }, take: MAX_LIST_LEN, where: { upedUsers: { key: userKey }, hashTags: { text: hashTag } } })
+        else return await DB.Manager.find(Board, { relations: { hashTags: true, url: true }, order: { id: "DESC" }, take: MAX_LIST_LEN, where: { upedUsers: { key: userKey }, hashTags: { text: hashTag }, id: LessThan(startId) } })
+    } else if (keyword) {
+        if (startId == 0) return await DB.Manager.find(Board, { relations: { hashTags: true, url: true }, order: { id: "DESC" }, take: MAX_LIST_LEN, where: [{ upedUsers: { key: userKey }, hashTags: { text: keyword } }, { upedUsers: { key: userKey }, contents: Like(`%${keyword}%`) }] })
+        return await DB.Manager.find(Board, { relations: { hashTags: true, url: true }, order: { id: "DESC" }, take: MAX_LIST_LEN, where: [{ upedUsers: { key: userKey }, hashTags: { text: keyword }, id: LessThan(startId) }, { upedUsers: { key: userKey }, contents: Like(`%${keyword}%`), id: LessThan(startId) }] })
+    } return []
 }
 
 async function getUpedAndDowned(bList: Board[], userKey: number) {
@@ -96,11 +109,12 @@ async function getAllBoardInfos(bList) {
 
     for (const item of bList) {
         console.log("item", item)
+        if (item == null) continue
         const user: any = userTable[item.writer]
-        if (user == null || item == null) continue
+        let userName = user ? user.name : "?"
         const board = {
             id: item.id,
-            writer: user.name,
+            writer: userName,
             uid: item.url?.id,
             url: item.url?.url,
             urlHostname: item.url?.hostname,
@@ -127,10 +141,12 @@ exports.apiGetMyBoards = async (req, res, next) => {
     try {
         const startId = Number(req.query.sid)
         const userKey = req.decoded.userKey
+        console.log("si", startId, "uk", userKey)
         const bList = await getMyBoards(startId, userKey)
         const endId = await getEndIdOfList(bList, startId)
         const end = await getEndOfList(bList)
         const bInfoList = await getAllBoardInfos(bList)
+        console.log("bl", bList, "endId", endId, "end", end, "bInfoList", bInfoList)
         req.result = { boardList: bInfoList, end, endId }
         next()
     } catch (err) {

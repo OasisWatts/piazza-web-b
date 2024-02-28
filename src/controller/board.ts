@@ -10,6 +10,7 @@ import UserHashTag from "model/userHashTag"
 
 const MAX_CONTENTS_LEN = SETTINGS.board.contentsLen
 const MAX_HASH_TAG_LEN = SETTINGS.board.tagLenLim
+const MAX_HASH_TAG_NUM = SETTINGS.board.tagCountLim
 const MAX_LIST_LEN = SETTINGS.board.listLen
 
 /**
@@ -445,6 +446,7 @@ async function reactBoard(boardId: number, userKey: number, up: boolean, down: b
 
 export async function getEndOfList(list) {
     let endOfList = list.length < MAX_LIST_LEN ? true : false
+    console.log("ll", list.length, endOfList, MAX_LIST_LEN)
     return endOfList
 }
 
@@ -452,6 +454,7 @@ export async function getEndIdOfList(list, startId) {
     if (list.length == 0) return startId
     let endId = list[0].id
     list.forEach((b) => { if (endId > b.id) endId = b.id })
+    console.log("endId", endId)
     return endId
 }
 
@@ -470,7 +473,8 @@ exports.apiInsertBoard = async (req, res, next) => {
         if (hashTagText.length != 0) {
             hashTags = hashTagText.split("#")
         }
-        if (hashTags.length > MAX_HASH_TAG_LEN) return
+        if (hashTags.length > MAX_HASH_TAG_NUM) return
+        if (hashTags.some((tag) => tag > MAX_HASH_TAG_LEN || tag.trim().length < 1)) return
         let uid = Number(req.body.uid)
         let title = String(req.body.t)
         let isPublic = true
@@ -493,7 +497,8 @@ exports.apiUpdateBoard = async (req, res, next) => {
         if (contents.length > MAX_CONTENTS_LEN) return
         let hashTagText = req.body.h
         const hashTags = hashTagText.split("#")
-        if (hashTags.length > MAX_HASH_TAG_LEN) return
+        if (hashTags.length > MAX_HASH_TAG_NUM) return
+        if (hashTags.some((tag) => tag > MAX_HASH_TAG_LEN || tag.trim().length < 1)) return
         const result = await boardUpdate(boardId, userKey, contents, hashTags)
         if (result) next()
     } catch (err) {

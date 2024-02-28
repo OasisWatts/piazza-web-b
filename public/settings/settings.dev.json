@@ -7,7 +7,6 @@
       "board": {
             "listLen": 10,
             "contentsLen": 500,
-            "tagDisplayCnt": 20,
             "tagLenLim": 20,
             "tagCountLim": 20
       },

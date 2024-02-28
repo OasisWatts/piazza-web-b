@@ -4,7 +4,6 @@ declare type Settings = {
       board: {
             listLen: number
             contentsLen: number
-            tagDisplayCnt: number
             tagLenLim: number
             tagCountLim: number
       }
