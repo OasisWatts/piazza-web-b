@@ -47,10 +47,12 @@ DB.initialize().then(() => {
       })
       app.get("/myboards", verifyToken, boardListController.apiGetMyBoards, sendWithNewTokenJSON) // 본인이 작성한 게시글 목록 조회.
       app.get("/upedboards", verifyToken, boardListController.apiGetMyUpBoards, sendWithNewTokenJSON) // 본인이 up한 게시글 목록 조회.
-      app.get("/downedboards", verifyToken, boardListController.apiGetMyDownBoards, sendWithNewTokenJSON) // 본인이 up한 게시글 목록 조회.
+      app.get("/downedboards", verifyToken, boardListController.apiGetMyDownBoards, sendWithNewTokenJSON) // 본인이 down한 게시글 목록 조회.
+      app.get("/trendboards", verifyToken, boardListController.apiGetTrendBoards, sendWithNewTokenJSON) // trend 게시글 목록 조회.
       app.get("/urlboards", verifyToken, boardListController.apiGetUrlBoards, sendWithNewTokenJSON) // 같은 url의 게시글 목록 조회.
-      app.get("/myboardsearch", verifyToken, boardListController.apiGetMyBoardSearch, sendWithNewTokenJSON) // 같은 url의 게시글 목록 조회.
-      app.get("/upedboardsearch", verifyToken, boardListController.apiGetMyUpSearch, sendWithNewTokenJSON) // 같은 url의 게시글 목록 조회.
+      app.get("/myboardsearch", verifyToken, boardListController.apiGetMyBoardSearch, sendWithNewTokenJSON) // 본인이 작성한 게시글 중 검색하여 목록 조회.
+      app.get("/upedboardsearch", verifyToken, boardListController.apiGetMyUpSearch, sendWithNewTokenJSON) // 본인이 up한 게시글 중 검색하여 목록 조회.
+      app.get("/boardsearch", verifyToken, boardListController.apiGetBoardSearch, sendWithNewTokenJSON) // 게시글 중 검색하여 목록 조회.
 
       app.get("/hashTags", verifyToken, hashTagController.apiGetHashTag, sendWithNewTokenJSON)
 

@@ -309,12 +309,18 @@ async function reactComment(commentId: number, userKey: number, up: boolean, dow
 }
 
 async function getReplyListByStartId(commentId: number, replyStartId: number) {
-    if (replyStartId == 0) return await DB.Manager.find(Comment, { order: { id: "DESC" }, take: MAX_LIST_LEN, where: { replied: { id: commentId } } })
+    if (replyStartId == 0) {
+        await DB.Manager.increment(Comment, { id: commentId }, "visitNum", 1)
+        return await DB.Manager.find(Comment, { order: { id: "DESC" }, take: MAX_LIST_LEN, where: { replied: { id: commentId } } })
+    }
     else return await DB.Manager.find(Comment, { order: { id: "DESC" }, take: MAX_LIST_LEN, where: { replied: { id: commentId }, id: LessThan(replyStartId) } })
 }
 
 async function getCommentListByStartId(boardId: number, commentStartId: number) {
-    if (commentStartId == 0) return await DB.Manager.find(Comment, { order: { id: "DESC" }, take: MAX_LIST_LEN, where: { board: { id: boardId } } })
+    if (commentStartId == 0) {
+        await DB.Manager.increment(Board, { id: boardId }, "visitNum", 1)
+        return await DB.Manager.find(Comment, { order: { id: "DESC" }, take: MAX_LIST_LEN, where: { board: { id: boardId } } })
+    }
     else return await DB.Manager.find(Comment, { order: { id: "DESC" }, take: MAX_LIST_LEN, where: { board: { id: boardId }, id: LessThan(commentStartId) } })
 }
 

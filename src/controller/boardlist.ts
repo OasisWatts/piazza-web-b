@@ -6,11 +6,13 @@ import { Logger } from "util/logger"
 import { ErrorCode } from "common/applicationCode"
 import { getEndIdOfList, getEndOfList } from "./board"
 import Board from "model/board"
-import { LessThan, Like } from "typeorm"
+import { LessThan, Like, MoreThan } from "typeorm"
 
 
-const MAX_CONTENTS_LEN = 100 // SETTINGS.board.contentsLen
+const MAX_CONTENTS_LEN = SETTINGS.board.contentsLen
 const MAX_LIST_LEN = SETTINGS.board.listLen
+const TREND_LIST_LEN = SETTINGS.board.trendListLen
+const TREND_LIST_FILTER_ID_RANGE = SETTINGS.board.trendListFilterIdRange
 
 async function getMyBoards(startId: number, userKey: number): Promise<any[]> {
     if (startId == 0) return await DB.Manager.find(Board, { relations: { hashTags: true, url: true }, order: { id: "DESC" }, take: MAX_LIST_LEN, where: { writer: userKey } })
@@ -25,6 +27,13 @@ async function getMyUpBoards(startId: number, userKey: number): Promise<any[]> {
 async function getMyDownBoards(startId: number, userKey: number): Promise<any[]> {
     if (startId == 0) return await DB.Manager.find(Board, { relations: { hashTags: true, url: true }, order: { id: "DESC" }, take: MAX_LIST_LEN, where: { downedUsers: { key: userKey } } })
     return await DB.Manager.find(Board, { relations: { hashTags: true, url: true }, order: { id: "DESC" }, take: MAX_LIST_LEN, where: { downedUsers: { key: userKey }, id: LessThan(startId) } })
+}
+
+async function getTrendBoards(startId: number): Promise<any[]> {
+    const board = await DB.Manager.find(Board, { order: { id: "DESC" }, take: 1 })
+    const trendBoards = await DB.Manager.find(Board, { relations: { hashTags: true, url: true }, order: { visitNum: "DESC", id: "DESC" }, take: TREND_LIST_LEN, where: { id: MoreThan(board[0].id - TREND_LIST_FILTER_ID_RANGE), isPublic: true } })
+    console.log("trend list", trendBoards.length, startId)
+    return trendBoards.slice(MAX_LIST_LEN * startId, MAX_LIST_LEN * (startId + 1))
 }
 
 async function getUrlBoards(startId: number, url: number): Promise<any[]> {
@@ -50,6 +59,16 @@ async function getMyUpSearch(startId: number, userKey: number, hashTag: string, 
     } else if (keyword) {
         if (startId == 0) return await DB.Manager.find(Board, { relations: { hashTags: true, url: true }, order: { id: "DESC" }, take: MAX_LIST_LEN, where: [{ upedUsers: { key: userKey }, hashTags: { text: keyword } }, { upedUsers: { key: userKey }, contents: Like(`%${keyword}%`) }] })
         return await DB.Manager.find(Board, { relations: { hashTags: true, url: true }, order: { id: "DESC" }, take: MAX_LIST_LEN, where: [{ upedUsers: { key: userKey }, hashTags: { text: keyword }, id: LessThan(startId) }, { upedUsers: { key: userKey }, contents: Like(`%${keyword}%`), id: LessThan(startId) }] })
+    } return []
+}
+
+async function getBoardSearch(startId: number, hashTag: string, keyword: string): Promise<any[]> {
+    if (hashTag) {
+        if (startId == 0) return await DB.Manager.find(Board, { relations: { hashTags: true, url: true }, order: { id: "DESC" }, take: MAX_LIST_LEN, where: { hashTags: { text: hashTag }, isPublic: true } })
+        else return await DB.Manager.find(Board, { relations: { hashTags: true, url: true }, order: { id: "DESC" }, take: MAX_LIST_LEN, where: { hashTags: { text: hashTag }, id: LessThan(startId), isPublic: true } })
+    } else if (keyword) {
+        if (startId == 0) return await DB.Manager.find(Board, { relations: { hashTags: true, url: true }, order: { id: "DESC" }, take: MAX_LIST_LEN, where: [{ hashTags: { text: keyword }, isPublic: true }, { contents: Like(`%${keyword}%`), isPublic: true }] })
+        return await DB.Manager.find(Board, { relations: { hashTags: true, url: true }, order: { id: "DESC" }, take: MAX_LIST_LEN, where: [{ hashTags: { text: keyword }, id: LessThan(startId), isPublic: true }, { contents: Like(`%${keyword}%`), id: LessThan(startId), isPublic: true }] })
     } return []
 }
 
@@ -108,7 +127,6 @@ async function getAllBoardInfos(bList) {
     const userTable = reduceToTable(users, (v) => v, (v) => v.key)
 
     for (const item of bList) {
-        console.log("item", item)
         if (item == null) continue
         const user: any = userTable[item.writer]
         let userName = user ? user.name : "?"
@@ -186,6 +204,21 @@ exports.apiGetMyDownBoards = async (req, res, next) => {
     }
 }
 
+exports.apiGetTrendBoards = async (req, res, next) => {
+    try {
+        const startId = Number(req.query.sid)
+        const userKey = req.decoded.userKey
+        const bList = await getTrendBoards(startId)
+        const end = await getEndOfList(bList)
+        const bListWithUpedAndDowned = await getUpedAndDowned(bList, userKey)
+        const bInfoList = await getAllBoardInfos(bListWithUpedAndDowned)
+        req.result = { boardList: bInfoList, end, endId: startId + 1 }
+        next()
+    } catch (err) {
+        Logger.errorApp(ErrorCode.api_failed).put("apiGetTrendBoards").put(err).out()
+    }
+}
+
 exports.apiGetUrlBoards = async (req, res, next) => {
     try {
         const startId = Number(req.query.sid)
@@ -238,5 +271,23 @@ exports.apiGetMyUpSearch = async (req, res, next) => {
         next()
     } catch (err) {
         Logger.errorApp(ErrorCode.api_failed).put("apiGetMyUpSearch").put(err).out()
+    }
+}
+
+exports.apiGetBoardSearch = async (req, res, next) => {
+    try {
+        const startId = Number(req.query.sid)
+        const userKey = req.decoded.userKey
+        const hashTag = req.query.ht
+        const keyword = req.query.kw
+        const bList = await getBoardSearch(startId, hashTag, keyword)
+        const endId = await getEndIdOfList(bList, startId)
+        const end = await getEndOfList(bList)
+        const bListWithUpedAndDowned = await getUpedAndDowned(bList, userKey)
+        const bInfoList = await getAllBoardInfos(bListWithUpedAndDowned)
+        req.result = { boardList: bInfoList, end, endId }
+        next()
+    } catch (err) {
+        Logger.errorApp(ErrorCode.api_failed).put("apiGetBoardSearch").put(err).out()
     }
 }

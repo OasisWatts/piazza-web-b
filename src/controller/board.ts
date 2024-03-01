@@ -445,16 +445,13 @@ async function reactBoard(boardId: number, userKey: number, up: boolean, down: b
 
 
 export async function getEndOfList(list) {
-    let endOfList = list.length < MAX_LIST_LEN ? true : false
-    console.log("ll", list.length, endOfList, MAX_LIST_LEN)
-    return endOfList
+    return list.length < MAX_LIST_LEN ? true : false
 }
 
 export async function getEndIdOfList(list, startId) {
     if (list.length == 0) return startId
     let endId = list[0].id
     list.forEach((b) => { if (endId > b.id) endId = b.id })
-    console.log("endId", endId)
     return endId
 }
 

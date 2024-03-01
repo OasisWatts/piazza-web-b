@@ -28,6 +28,12 @@
                         },
                         "tagCountLim": {
                               "type": "number"
+                        },
+                        "trendListLen": {
+                              "type": "number"
+                        },
+                        "trendListFilterIdRange": {
+                              "type": "number"
                         }
                   }
             },

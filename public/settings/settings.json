@@ -8,7 +8,9 @@
             "listLen": 10,
             "contentsLen": 500,
             "tagLenLim": 20,
-            "tagCountLim": 20
+            "tagCountLim": 20,
+            "trendListLen": 100,
+            "trendListFilterIdRange": 10000
       },
       "comment": {
             "contentsLen": 500

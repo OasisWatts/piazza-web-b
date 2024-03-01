@@ -3,8 +3,10 @@ import { ErrorCode } from "common/applicationCode"
 import User from "model/user"
 import { Logger } from "util/logger"
 import admin from 'firebase-admin'
-import { OAuth2Client } from 'google-auth-library';
+import { OAuth2Client } from 'google-auth-library'
+import verifyAppleToken from "verify-apple-id-token"
 import { getAuth } from "firebase-admin/auth"
+import axios from "axios"
 
 const { makeAccessToken, makeRefreshToken } = require("database/token")
 
@@ -20,13 +22,34 @@ function decodeToken(idToken: string, signedMethod: string) {
         return new Promise((resolve, reject) => {
             client.verifyIdToken({
                 idToken: idToken,
-                audience: "1014849903887-9mnmap14qoqt5mps4458tgumbhu6pdf7.apps.googleusercontent.com",  // Specify the CLIENT_ID of the app that accesses the backend
+                audience: ["1014849903887-9mnmap14qoqt5mps4458tgumbhu6pdf7.apps.googleusercontent.com", "1014849903887-fdgqqjforesaopodqbsm9nlg2se4mud7.apps.googleusercontent.com"],  // Specify the CLIENT_ID of the app that accesses the backend
                 // Or, if multiple clients access the backend:
                 //[CLIENT_ID_1, CLIENT_ID_2, CLIENT_ID_3]
             }).then((ticket) => {
                 const payload = ticket.getPayload();
                 console.log(payload)
                 resolve({ uid: payload.sub, email: payload.email })
+            }).catch((error) => {
+                Logger.errorApp(ErrorCode.token_failed).put(error).out()
+            })
+        })
+    } else if (signedMethod == "facebook") {
+        return new Promise((resolve, reject) => {
+            axios.get(
+                `https://graph.facebook.com/me?access_token=${idToken}`).then((res) => {
+                    resolve({ uid: res.data.id, email: res.data.email })
+                }).catch((error) => {
+                    Logger.errorApp(ErrorCode.token_failed).put(error).out()
+                })
+        });
+    } else if (signedMethod == "apple") {
+        return new Promise((resolve, reject) => {
+            verifyAppleToken({
+                idToken: idToken,
+                clientId: "com.brownie.flutterbrowser"
+            }).then((res) => {
+                console.log("res", res)
+                resolve({ uid: res.sub, email: res.email })
             }).catch((error) => {
                 Logger.errorApp(ErrorCode.token_failed).put(error).out()
             })
@@ -48,12 +71,10 @@ function decodeToken(idToken: string, signedMethod: string) {
  * 로그인 또는 계정 생성
  */
 async function signIn(token: string, signedMethod: string) {
-    console.log("1")
     const decodedToken = await decodeToken(token, signedMethod)
-    console.log("2")
     if (decodedToken) {
         return new Promise((resolve, reject) => {
-            console.log("signIn", decodedToken)
+            // console.log("signIn", decodedToken)
             DB.Manager.findOne(User, { where: { uid: decodedToken["uid"], email: decodedToken["email"] } }).then((user) => {
                 if (user) {
                     Logger.passApp("signIn").put("complete").out()

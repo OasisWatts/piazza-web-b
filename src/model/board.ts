@@ -2,7 +2,7 @@ import Comment from "./comment"
 import HashTag from "./hashTag"
 import Url from "./url"
 import User from "./user"
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, ManyToMany, OneToMany, ManyToOne, JoinTable } from "typeorm"
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, ManyToMany, OneToMany, ManyToOne, JoinTable, Index } from "typeorm"
 
 @Entity({ name: "board", schema: "brownie" })
 export default class Board {
@@ -23,6 +23,10 @@ export default class Board {
 
       @Column({ type: "boolean" })
       public isPublic!: boolean
+
+      @Index()
+      @Column({ type: "int", default: 0 })
+      public visitNum!: number
 
       /** 댓글과의 관계 설정. */
       @OneToMany(

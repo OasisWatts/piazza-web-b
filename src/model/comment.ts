@@ -20,6 +20,9 @@ export default class Comment {
       @Column({ type: "boolean", default: false })
       public updated!: boolean
 
+      @Column({ type: "int", default: 0 })
+      public visitNum!: number
+
       /** 게시글과 관계 설정. */
       @ManyToOne(
             () => Board,

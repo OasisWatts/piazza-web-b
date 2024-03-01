@@ -6,6 +6,8 @@ declare type Settings = {
             contentsLen: number
             tagLenLim: number
             tagCountLim: number
+            trendListLen: number
+            trendListFilterIdRange: number
       }
       comment: {
             contentsLen: number
