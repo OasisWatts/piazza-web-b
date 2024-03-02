@@ -27,7 +27,6 @@ function decodeToken(idToken: string, signedMethod: string) {
                 //[CLIENT_ID_1, CLIENT_ID_2, CLIENT_ID_3]
             }).then((ticket) => {
                 const payload = ticket.getPayload();
-                console.log(payload)
                 resolve({ uid: payload.sub, email: payload.email })
             }).catch((error) => {
                 Logger.errorApp(ErrorCode.token_failed).put(error).out()
@@ -48,7 +47,6 @@ function decodeToken(idToken: string, signedMethod: string) {
                 idToken: idToken,
                 clientId: "com.brownie.flutterbrowser"
             }).then((res) => {
-                console.log("res", res)
                 resolve({ uid: res.sub, email: res.email })
             }).catch((error) => {
                 Logger.errorApp(ErrorCode.token_failed).put(error).out()
@@ -74,13 +72,11 @@ async function signIn(token: string, signedMethod: string) {
     const decodedToken = await decodeToken(token, signedMethod)
     if (decodedToken) {
         return new Promise((resolve, reject) => {
-            // console.log("signIn", decodedToken)
             DB.Manager.findOne(User, { where: { uid: decodedToken["uid"], email: decodedToken["email"] } }).then((user) => {
                 if (user) {
                     Logger.passApp("signIn").put("complete").out()
                     resolve({ signed: true, userKey: user.key, name: user.name, image: user.image })
                 } else {
-                    console.log("needSignUp")
                     resolve({ needSignUp: true })
                 }
             }).catch((err) => Logger.errorApp(ErrorCode.user_find_failed).put("signIn").put(err).out())

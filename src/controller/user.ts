@@ -9,7 +9,6 @@ import { Logger } from "util/logger"
  * @param name
  */
 async function changeName(userKey: number, name: string) {
-    console.log("cn", name)
     return new Promise((resolve, reject) => {
         DB.Manager.update(User, { key: userKey }, { name: name }).then((res) => {
             Logger.passApp("change Name").put("complete").out()

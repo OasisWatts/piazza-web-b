@@ -13,22 +13,17 @@ const MAX_LIST_LEN = SETTINGS.board.listLen
 * @param userKey 사용자 디비 식별자.
 */
 async function UrlReact(urlid: number, title: string, userKey: number, toCancel: boolean) {
-    console.log("urlReact", toCancel, urlid)
     let url_ = await DB.Manager.findOne(Url, { where: { id: urlid } })
     if (url_) {
         if (title) DB.Manager.update(Url, { id: urlid }, { title: title })
 
-        console.log("url_", url_)
         const reacted = await DB.Manager.query(`select * from \`user_reacted_urls_url\` where userKey=${userKey} and urlId=${url_.id}`)
 
-        console.log(reacted, toCancel)
         if (reacted.length && toCancel) {
-            console.log("react to false")
             await DB.Manager.query(`delete from \`user_reacted_urls_url\` where userKey=${userKey} and urlId=${url_.id}`)
             await DB.Manager.decrement(Url, { id: url_.id }, "reactNum", 1)
             return ({ reacted: false })
         } else if (!reacted.length && !toCancel) {
-            console.log("react to true")
             await DB.Manager.query(`insert into \`user_reacted_urls_url\` (userKey, urlId) values (${userKey}, ${url_.id})`)
             await DB.Manager.increment(Url, { id: url_.id }, "reactNum", 1)
             return ({ reacted: true })
@@ -121,7 +116,6 @@ exports.apiGetUrlInfo = async (req, res, next) => {
         const urlname = String(req.body.u)
         const hostname = String(req.body.h)
         const userKey = req.decoded.userKey
-        console.log("apiGetUrlInfo", urlname)
         const result = await getUrl(urlname, hostname, userKey)
         if (result) {
             req.result = result

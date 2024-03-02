@@ -25,7 +25,6 @@ async function commentInsert(boardId: number, writerKey: number, contents: strin
     const queryRunner = DB.connection.createQueryRunner()
     await queryRunner.connect()
     await queryRunner.startTransaction()
-    console.log(boardId, writerKey, contents)
     try {
         inserted = await queryRunner.manager.insert(Comment, {
             writer: writerKey,
@@ -269,39 +268,30 @@ async function cancelDownComment(commentId: number, userKey: number) {
 * @param userKey 사용자 디비 식별자.
 */
 async function reactComment(commentId: number, userKey: number, up: boolean, down: boolean) {
-    console.log("reactBoard")
     const board = await DB.Manager.findOne(Comment, { where: { id: commentId }, select: ["writer"] })
     if (board?.writer === userKey) return null
 
     const uped = await DB.Manager.query(`select * from \`user_uped_comments_board\` where userKey=${userKey} and commentId=${commentId}`)
     const downed = await DB.Manager.query(`select * from \`user_downed_comments_board\` where userKey=${userKey} and commentId=${commentId}`)
 
-    console.log(uped, downed)
-
     if (up) {
         if (uped.length) {
-            console.log("cancelUpComment")
             return await cancelUpComment(commentId, userKey)
         } else if (!uped.length) {
             if (downed.length) {
-                console.log("upAndCancelDownComment")
                 return await upAndCancelDownComment(commentId, userKey)
             } else {
-                console.log("upComment")
                 return await upComment(commentId, userKey)
             }
         }
     }
     if (down) {
         if (downed.length) {
-            console.log("cancelDownComment")
             return await cancelDownComment(commentId, userKey)
         } else if (!downed.length) {
             if (uped.length) {
-                console.log("downAndCancelUpComment")
                 return await downAndCancelUpComment(commentId, userKey)
             } else {
-                console.log("downComment")
                 return await downComment(commentId, userKey)
             }
         }
@@ -360,7 +350,6 @@ async function getUpedAndDowned(commentList: Comment[], userKey: number) {
 
 async function getCommentListInfoByStartId(commentList: any[]) {
     const userWhere: { key: number }[] = []
-    console.log("b cl st", commentList)
     for (const comment of commentList) {
         userWhere.push({
             key: comment.writer
@@ -372,7 +361,6 @@ async function getCommentListInfoByStartId(commentList: any[]) {
     const userTable = reduceToTable(users, (v) => v, (v) => v.key)
     const commentInfoList = []
     for (const comment of commentList) {
-        console.log("comment", comment)
         const user = userTable[comment.writer]
         let userName = user ? user.name : "?"
         const commentInfo = {
@@ -389,7 +377,6 @@ async function getCommentListInfoByStartId(commentList: any[]) {
         }
         commentInfoList.push(commentInfo)
     }
-    console.log("cil", commentInfoList)
     return commentInfoList
 }
 
@@ -398,7 +385,6 @@ exports.apiInsertComment = async (req, res, next) => {
         const userKey = req.decoded.userKey
         const contents = req.body.c
         let boardId = Number(req.body.b)
-        console.log("apiInser", userKey, contents, boardId)
         if (contents.length > MAX_CONTENTS_LEN) return // TODO front error handling -> comment MAX_CONTENTS_LEN has to be changed in frontent 
         const result = await commentInsert(boardId, userKey, contents)
         if (result) {
@@ -469,7 +455,6 @@ exports.apiReactComment = async (req, res, next) => {
 
 exports.apiGetCommentList = async (req, res, next) => {
     try {
-        console.log("api get comment list")
         const startId = Number(req.query.sid)
         const userKey = req.decoded.userKey
         const boardId = req.query.bid
@@ -487,7 +472,6 @@ exports.apiGetCommentList = async (req, res, next) => {
 
 exports.apiGetReplyList = async (req, res, next) => {
     try {
-        console.log("api get reply list")
         const startId = Number(req.query.sid)
         const userKey = req.decoded.userKey
         const commentId = req.query.cid
@@ -496,7 +480,6 @@ exports.apiGetReplyList = async (req, res, next) => {
         const end = await getEndOfList(commentList)
         const commentListUpedAndDowned = await getUpedAndDowned(commentList, userKey)
         const cInfoList = await getCommentListInfoByStartId(commentListUpedAndDowned)
-        console.log("cInfoList", cInfoList)
         req.result = { commentList: cInfoList, end, endId }
         next()
     } catch (err) {

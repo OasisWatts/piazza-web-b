@@ -19,7 +19,6 @@ const MAX_LIST_LEN = SETTINGS.board.listLen
  * @param contents 게시글 내용.
  */
 async function boardInsert(writerKey: number, contents: string, hashTags: string[], urlid: number, title: string, isPublic: boolean) {
-    console.log("bi", urlid, title, hashTags)
     const user = await DB.Manager.findOne(User, { where: { key: writerKey } })
     let urlObj
     if (urlid) {
@@ -140,7 +139,6 @@ async function boardUpdate(boardId: number, updaterKey: number, contents: string
                 }
             }
             const hashTagObjs = await Promise.all(hashTagPromises)
-            console.log("dh", deleteHashTags, "nh", newHashTags)
             for (let tag of newHashTags) { // new hash tag
                 userHashTagPromises.push(
                     new Promise(async (resolve, reject) => {
@@ -215,13 +213,11 @@ async function boardDelete(boardId: number, userKey: number) {
             promises.push(
                 new Promise(async (resolve, reject) => {
                     try {
-                        console.log("delete tag", tag)
                         const userHashTagObj = await DB.Manager.findOne(UserHashTag, { where: { user: { key: userKey }, hashTag: { text: tag.text } } })
                         if (!userHashTagObj) {
                             Logger.errorApp(ErrorCode.user_hashtag_failed).put("boardDelete").put("no userHashTag").out()
                             reject("no userHashTag")
                         }
-                        console.log("uht", userHashTagObj)
                         if (userHashTagObj.count > 1) {
                             await DB.Manager.decrement(UserHashTag, userHashTagObj, "count", 1)
                         } else {
@@ -404,39 +400,30 @@ async function cancelDownBoard(boardId: number, userKey: number) {
 * @param userKey 사용자 디비 식별자.
 */
 async function reactBoard(boardId: number, userKey: number, up: boolean, down: boolean) {
-    console.log("reactBoard")
     const board = await DB.Manager.findOne(Board, { where: { id: boardId }, select: ["writer"] })
     if (board?.writer === userKey) return null
 
     const uped = await DB.Manager.query(`select * from \`user_uped_boards_board\` where userKey=${userKey} and boardId=${boardId}`)
     const downed = await DB.Manager.query(`select * from \`user_downed_boards_board\` where userKey=${userKey} and boardId=${boardId}`)
 
-    console.log(uped, downed)
-
     if (up) {
         if (uped.length) {
-            console.log("cancelUpBoard")
             return await cancelUpBoard(boardId, userKey)
         } else if (!uped.length) {
             if (downed.length) {
-                console.log("upAndCancelDownBoard")
                 return await upAndCancelDownBoard(boardId, userKey)
             } else {
-                console.log("upBoard")
                 return await upBoard(boardId, userKey)
             }
         }
     }
     if (down) {
         if (downed.length) {
-            console.log("cancelDownBoard")
             return await cancelDownBoard(boardId, userKey)
         } else if (!downed.length) {
             if (uped.length) {
-                console.log("downAndCancelUpBoard")
                 return await downAndCancelUpBoard(boardId, userKey)
             } else {
-                console.log("downBoard")
                 return await downBoard(boardId, userKey)
             }
         }

@@ -32,7 +32,6 @@ async function getMyDownBoards(startId: number, userKey: number): Promise<any[]>
 async function getTrendBoards(startId: number): Promise<any[]> {
     const board = await DB.Manager.find(Board, { order: { id: "DESC" }, take: 1 })
     const trendBoards = await DB.Manager.find(Board, { relations: { hashTags: true, url: true }, order: { visitNum: "DESC", id: "DESC" }, take: TREND_LIST_LEN, where: { id: MoreThan(board[0].id - TREND_LIST_FILTER_ID_RANGE), isPublic: true } })
-    console.log("trend list", trendBoards.length, startId)
     return trendBoards.slice(MAX_LIST_LEN * startId, MAX_LIST_LEN * (startId + 1))
 }
 
@@ -159,12 +158,10 @@ exports.apiGetMyBoards = async (req, res, next) => {
     try {
         const startId = Number(req.query.sid)
         const userKey = req.decoded.userKey
-        console.log("si", startId, "uk", userKey)
         const bList = await getMyBoards(startId, userKey)
         const endId = await getEndIdOfList(bList, startId)
         const end = await getEndOfList(bList)
         const bInfoList = await getAllBoardInfos(bList)
-        console.log("bl", bList, "endId", endId, "end", end, "bInfoList", bInfoList)
         req.result = { boardList: bInfoList, end, endId }
         next()
     } catch (err) {
@@ -243,9 +240,7 @@ exports.apiGetMyBoardSearch = async (req, res, next) => {
         const userKey = req.decoded.userKey
         const hashTag = req.query.ht
         const keyword = req.query.kw
-        console.log(hashTag, keyword)
         const bList = await getMyBoardSearch(startId, userKey, hashTag, keyword)
-        console.log("bl", bList)
         const endId = await getEndIdOfList(bList, startId)
         const end = await getEndOfList(bList)
         const bInfoList = await getAllBoardInfos(bList)

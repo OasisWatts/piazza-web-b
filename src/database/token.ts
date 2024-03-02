@@ -35,7 +35,6 @@ export function makeAccessToken(userKey) {
 
 export async function makeRefreshToken(userKey) {
     try {
-        console.log("makeRefreshToken")
         const token = jwt.sign({
         }, process.env.JWT_SECRET, {
             expiresIn: "14d"
@@ -50,32 +49,24 @@ export async function makeRefreshToken(userKey) {
 export const verifyToken = async (req, res, next) => {
     try {
         const accessTokenVerified = await verifyAccessToken(req.headers.authorization)
-        console.log("verifyToken")
         if (accessTokenVerified.ok) { // authorized and not expired
-            console.log("verified")
             req.decoded = accessTokenVerified.decoded
             const refreshTokenVerified = await verifyRefreshToken(req.decoded.userKey)
             if (!refreshTokenVerified) await makeRefreshToken(req.decoded.userKey)
-            console.log("next")
             return next();
         } else {
-            console.log("unverified")
             const decoded = jwt.decode(req.headers.authorization)
-            console.log("userKey", decoded["userKey"])
             const refreshTokenVerified = await verifyRefreshToken(decoded["userKey"])
             if (refreshTokenVerified) {
-                console.log("refreshTkVerified")
                 req.decoded = decoded
                 req.newToken = makeAccessToken(decoded["userKey"])
                 return next();
             } else { // refresh token and access token unverified
-                console.log("failed both")
                 return res.json({ needAuth: true })
             }
         }
     } catch (err) {
         Logger.errorApp(ErrorCode.verify_token_failed).put("verify token").put(err).out()
-        console.log("verify error")
         return res.json({ needAuth: true })
     }
 }
