@@ -79,24 +79,21 @@ DB.initialize().then(() => {
       app.post("/changeName", verifyToken, userController.apiChangeName, sendWithNewToken)
       app.get("/deleteAccount", verifyToken, userController.apiDeleteAccount, sendWithNewToken)
 
-      let server
       if (!CLOTHES.development && SETTINGS.https) {
             const ssl_options = SETTINGS.https && ({
                   cert: fs.readFileSync(SETTINGS.https.cert),
                   key: fs.readFileSync(SETTINGS.https.key),
                   ca: fs.readFileSync(SETTINGS.https.ca),
             })
-            server = https.createServer(ssl_options, app).listen(SETTINGS.port, function () { // pm2
+            const server = https.createServer(ssl_options, app).listen(SETTINGS.port, function () { // pm2
                   process.send("ready")
+            })
+            process.on("SIGINT", function () { // pm2
+                  server.close(function () {
+                        process.exit(0)
+                  })
             })
       } else {
-            server = app.listen(SETTINGS.port, function () { // pm2
-                  process.send("ready")
-            })
+            app.listen(SETTINGS.port)
       }
-      process.on("SIGINT", function () { // pm2
-            server.close(function () {
-                  process.exit(0)
-            })
-      })
 })
