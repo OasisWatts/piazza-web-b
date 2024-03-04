@@ -231,7 +231,7 @@ export class Logger {
       }
 
       private static get directoryPath(): string {
-            return `${__dirname}/../../${setting.SETTINGS.log.directory}/${Logger.subject}`
+            return `${__dirname}/../public/settings/${setting.SETTINGS.log.directory}/${Logger.subject}`
       }
 
       private readonly type: LogLevel;
