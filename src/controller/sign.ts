@@ -70,9 +70,7 @@ function decodeToken(idToken: string, signedMethod: string) {
  */
 async function signIn(token: string, signedMethod: string) {
     const decodedToken = await decodeToken(token, signedMethod)
-    console.log("1")
     if (decodedToken) {
-        console.log("2")
         return new Promise((resolve, reject) => {
             DB.Manager.findOne(User, { where: { uid: decodedToken["uid"], email: decodedToken["email"] } }).then((user) => {
                 if (user) {
