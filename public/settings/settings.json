@@ -1,19 +1,19 @@
 {
       "$schema": "./settings.schema.json",
-      "host": "https://corner.dance",
+      "host": "https://webrownie.com",
       "language-support": {
             "ko-KR": "한국어"
       },
       "board": {
-            "listLen": 10,
-            "contentsLen": 500,
-            "tagLenLim": 20,
-            "tagCountLim": 20,
+            "listLen": 15,
+            "contentsLen": 3000,
+            "tagLenLim": 50,
+            "tagCountLim": 10,
             "trendListLen": 100,
             "trendListFilterIdRange": 10000
       },
       "comment": {
-            "contentsLen": 500
+            "contentsLen": 3000
       },
       "follow": {
             "limit": 100,
@@ -31,7 +31,7 @@
             "secret": "brownie"
       },
       "database": {
-            "host": "127.0.0.1",
+            "host": "mysql",
             "port": 3306,
             "username": "root",
             "password": "ekfkfktk2!",
@@ -42,10 +42,9 @@
             "directory": "logs"
       },
       "https": {
-            "key": "/etc/letsencrypt/live/corner.dance/privkey.pem",
-            "cert": "/etc/letsencrypt/live/corner.dance/cert.pem",
-            "ca": "/etc/letsencrypt/live/corner.dance/fullchain.pem"
+            "key": "/home/docker/nginx_proxy_manager/letsencrypt/live/npm-1/privkey.pem",
+            "cert": "/home/docker/nginx_proxy_manager/letsencrypt/live/npm-1/cert.pem",
+            "ca": "/home/docker/nginx_proxy_manager/letsencrypt/live/npm-1/fullchain.pem"
       },
-      "port": 4416,
-      "extension": "https://chrome.google.com/webstore/detail/corner/onkbamknephmfkcbgegadepncekiadae"
+      "port": 4416
 }

@@ -44,7 +44,6 @@ declare type Settings = {
             cert: string
       }
       port: number
-      extension: string
 }
 
 declare type boardType = {

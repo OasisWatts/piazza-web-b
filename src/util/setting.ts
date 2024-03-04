@@ -52,7 +52,6 @@ export function writeClientConstants(): void {
             "board",
             "follow",
             "block",
-            "extension"
       ))
       fs.writeFileSync(
             path.resolve(__dirname, "constants.js"),

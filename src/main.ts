@@ -43,7 +43,7 @@ DB.initialize().then(() => {
             res.send("succeed!")
       })
       app.get("/test", async (req, res) => {
-            res.send("succeed2")
+            res.send("test succeed")
       })
       app.get("/myboards", verifyToken, boardListController.apiGetMyBoards, sendWithNewTokenJSON) // 본인이 작성한 게시글 목록 조회.
       app.get("/upedboards", verifyToken, boardListController.apiGetMyUpBoards, sendWithNewTokenJSON) // 본인이 up한 게시글 목록 조회.

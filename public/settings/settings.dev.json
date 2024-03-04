@@ -41,6 +41,5 @@
             "interval": 8640000000,
             "directory": "logs"
       },
-      "port": 4416,
-      "extension": "https://chrome.google.com/webstore/detail/corner/onkbamknephmfkcbgegadepncekiadae"
+      "port": 4416
 }

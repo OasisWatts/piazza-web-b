@@ -5,9 +5,9 @@
   "main": "index.js",
   "scripts": {
     "test": "jest",
-    "build-back": "webpack --config ./webpack.back.config.js --mode development",
+    "build-back": "webpack --config ./webpack.back.config.js",
     "server": "pm2 start ecosystem.config.js",
-    "server-dev": "node build/main.js",
+    "server-dev": "node build/main.js -remote",
     "reload": "pm2 reload brownie",
     "list": "pm2 list",
     "delete": "pm2 delete brownie"
