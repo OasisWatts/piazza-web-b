@@ -1,13 +1,14 @@
 # Brownie backend
+</br>
 
-
+---
 ## deploy with docker
 - build image ( 이 폴더의 Dockerfile을 이용해, brownie-back 이라는 이름의 image를 생성 또는 갱신 )
 ``` docker build -t brownie-back . ```  
 - container 생성 (imgae를 기반으로, mysql, node, nginx container)
 ``` docker-compose up -d ```  
 
-### 잘 작동이 안 될 때
+#### 잘 작동이 안 될 때
 - docker에 잘 올라와 있나 확인
 ``` docker container ps -a ```
 - docker 네트워크 잘 연결되어있나 확인
@@ -17,30 +18,28 @@
 - mysql 관련 오류가 발생 시, mysql bash 입장
 ``` docker exec -it mysql bash ```
 
+---
 
-## prepare for deploy
+## deploy checklist
 - settings.json configuration 확인
 - app(social_media_browser) 소스 코드(util.ts)에서도 configuration이 일치하는지 확인
 - ssl certificates 종료 기한 확인. 종료 기한을 nginx_proxy_manager(172.233.129.121:81)에서 확인하고, ssl 인증서 갱신
 - 모든 container가 잘 돌아가는지 확인. portainer(172.233.129.121:9000) 또는 docker container ps -a 명령어로 확인
 
-
-## management
-- log 저장 위치
-
+---
 
 ## 만약에..
-### nginx를 변경할 일이 생겼다
+#### nginx를 변경할 일이 생겼다
 - nginx.conf 변경
 - docker restart nginx (docker exec nginx nginx -s reload가 안통함)
-### node 서버에서 typeorm synchronize:true로 인한 문제가 생겼다
+#### node 서버에서 typeorm synchronize:true로 인한 문제가 생겼다
 - 한 서버는 잘 돌아가고, 나머지 서버에서 오류가 났을 것
 - docker restart {container name}
-
+---
 ## 주의
-### mysql db 조심히 다루기
+#### mysql db 조심히 다루기
 - docker-compose.yml의 db: volumes, container name 변경 금지 (다른 것도 건들지 말기)
-
+---
 
 ## 세팅
 ### mysql backup
