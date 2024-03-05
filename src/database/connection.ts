@@ -41,7 +41,7 @@ export default class DB {
                   supportBigNumbers: true,
                   bigNumberStrings: false,
                   ...SETTINGS.database,
-                  synchronize: true, // synchronize: true여야 수정 entity가 반영
+                  synchronize:false, // synchronize: true여야 수정 entity가 반영
                   entities,
                   cache: true,
                   // logging: true,

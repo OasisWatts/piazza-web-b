@@ -1,8 +1,8 @@
 import express from "express"
 import DB from "database/connection"
 import { CLOTHES, SETTINGS, writeClientConstants } from "util/setting"
-import https from "https"
-import fs from "fs"
+//import https from "https"
+//import fs from "fs"
 import { sendWithNewToken, sendWithNewTokenJSON } from "database/token"
 require('dotenv').config();
 
@@ -40,7 +40,7 @@ DB.initialize().then(() => {
       //       next()
       // })
       app.get("/", async (req, res) => {
-            res.send("succeed!")
+            res.send("succeed? succeed!")
       })
       app.get("/test", async (req, res) => {
             res.send("test succeed")
@@ -79,20 +79,8 @@ DB.initialize().then(() => {
       app.post("/changeName", verifyToken, userController.apiChangeName, sendWithNewToken)
       app.get("/deleteAccount", verifyToken, userController.apiDeleteAccount, sendWithNewToken)
 
-      if (!CLOTHES.development && SETTINGS.https) {
-            const ssl_options = SETTINGS.https && ({
-                  cert: fs.readFileSync(SETTINGS.https.cert),
-                  key: fs.readFileSync(SETTINGS.https.key),
-                  ca: fs.readFileSync(SETTINGS.https.ca),
-            })
-            const server = https.createServer(ssl_options, app).listen(SETTINGS.port, function () { // pm2
-                  process.send("ready")
-            })
-            process.on("SIGINT", function () { // pm2
-                  server.close(function () {
-                        process.exit(0)
-                  })
-            })
+      if (!CLOTHES.development) {
+            app.listen(SETTINGS.port, '0.0.0.0') // container port로 노출 (ssl certificate는 nginx에서 load balance 전에 적용)
       } else {
             app.listen(SETTINGS.port)
       }

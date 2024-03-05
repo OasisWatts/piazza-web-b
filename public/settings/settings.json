@@ -42,9 +42,9 @@
             "directory": "logs"
       },
       "https": {
-            "key": "/home/docker/nginx_proxy_manager/letsencrypt/live/npm-1/privkey.pem",
-            "cert": "/home/docker/nginx_proxy_manager/letsencrypt/live/npm-1/cert.pem",
-            "ca": "/home/docker/nginx_proxy_manager/letsencrypt/live/npm-1/fullchain.pem"
+            "key": "ssl-privkey.pem",
+            "cert": "ssl-cert.pem",
+            "ca": "ssl-fullchain.pem"
       },
       "port": 4416
 }
