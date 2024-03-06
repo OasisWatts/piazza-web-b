@@ -111,6 +111,7 @@ exports.apiSignIn = async (req, res, next) => {
         const token = String(req.body.t)
         const signedMethod = String(req.body.m)
         const result: any = await signIn(token, signedMethod)
+        Logger.passApp("signIn").next("signedMethod").put(signedMethod).out()
         if (result) {
             if (result.signed) {
                 const token = makeAccessToken(result.userKey, result.userId)
@@ -130,6 +131,7 @@ exports.apiSignUp = async (req, res, next) => {
         const token = String(req.body.t)
         const name = String(req.body.n)
         const signedMethod = String(req.body.m)
+        Logger.passApp("apiSignUp").next("signedMethod").put(signedMethod).next("name").put(name).out()
         if (name.length < 2) return
         const result: any = await signUp(token, name, signedMethod)
         if (result.signed) {

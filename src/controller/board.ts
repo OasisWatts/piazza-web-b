@@ -454,6 +454,7 @@ exports.apiInsertBoard = async (req, res, next) => {
         const userId = req.decoded.userId
         const contents = req.body.c
         let hashTagText = req.body.h
+        Logger.passApp("apiInsertBoard").next("userId").put(userId).out()
         let hashTags = []
         if (hashTagText.length != 0) {
             hashTags = hashTagText.split("#")
@@ -480,6 +481,7 @@ exports.apiUpdateBoard = async (req, res, next) => {
         const userKey = req.decoded.userKey
         const userId = req.decoded.userId
         const contents = req.body.c
+        Logger.passApp("apiUpdateBoard").next("userId").put(userId).next("boardId").put(req.query.id).out()
         if (contents.length > MAX_CONTENTS_LEN) return
         let hashTagText = req.body.h
         const hashTags = hashTagText.split("#")
@@ -497,6 +499,7 @@ exports.apiDeleteBoard = async (req, res, next) => {
         const boardId = Number(req.query.id)
         const userKey = req.decoded.userKey
         const userId = req.decoded.userId
+        Logger.passApp("apiDeleteBoard").next("userId").put(userId).next("boardId").put(req.query.id).out()
         const result = await boardDelete(boardId, userKey, userId)
         if (result) next()
     } catch (err) {
@@ -510,6 +513,7 @@ exports.apiChangeBoardType = async (req, res, next) => {
         const forPublic = Boolean(req.query.pb)
         const userKey = req.decoded.userKey
         const userId = req.decoded.userId
+        Logger.passApp("apiChangeBoardType").next("userId").put(userId).next("boardId").put(req.query.id).next("forPublic").put(req.query.pb).out()
         const result = await boardChangeType(boardId, userKey, forPublic, userId)
         if (result) next()
     } catch (err) {
@@ -524,6 +528,7 @@ exports.apiReactBoard = async (req, res, next) => {
         const down = Boolean(req.query.d)
         const userKey = req.decoded.userKey
         const userId = req.decoded.userId
+        Logger.passApp("apiUpBoard").next("userId").put(userId).next("boardId").put(req.query.id).next("up").put(req.query.u).next("down").put(req.query.d).out()
         const result = await DB.Manager.transaction(() => reactBoard(boardId, userKey, up, down, userId))
         if (result) {
             req.result = result

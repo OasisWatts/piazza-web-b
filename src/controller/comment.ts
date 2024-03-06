@@ -387,6 +387,7 @@ exports.apiInsertComment = async (req, res, next) => {
         const userId = req.decoded.userId
         const contents = req.body.c
         let boardId = Number(req.body.b)
+        Logger.passApp("apiInsertComment").next("userId").put(userId).out()
         if (contents.length > MAX_CONTENTS_LEN) return // TODO front error handling -> comment MAX_CONTENTS_LEN has to be changed in frontent 
         const result = await commentInsert(boardId, userKey, contents, userId)
         if (result) {
@@ -404,6 +405,7 @@ exports.apiInsertReply = async (req, res, next) => {
         const userId = req.decoded.userId
         const contents = req.body.c
         let commentId = Number(req.body.cid)
+        Logger.passApp("apiInsertReply").next("userId").put(userId).out()
         if (contents.length > MAX_CONTENTS_LEN) return // TODO front error handling -> comment MAX_CONTENTS_LEN has to be changed in frontent 
         const result = await replyInsert(commentId, userKey, contents, userId)
         if (result) {
@@ -421,6 +423,7 @@ exports.apiUpdateComment = async (req, res, next) => {
         const userKey = req.decoded.userKey
         const userId = req.decoded.userId
         const contents = req.body.c
+        Logger.passApp("apiUpdateComment").next("userId").put(userId).next("commentId").put(req.query.id).out()
         if (contents.length > MAX_CONTENTS_LEN) return
         const result = await commentUpdate(commentId, userKey, contents, userId)
         if (result) next()
@@ -434,6 +437,7 @@ exports.apiDeleteComment = async (req, res, next) => {
         const commentId = Number(req.query.id)
         const userKey = req.decoded.userKey
         const userId = req.decoded.userId
+        Logger.passApp("apiDeleteComment").next("userId").put(userId).next("commentId").put(req.query.id).out()
         const result = await commentDelete(commentId, userKey, userId)
         if (result) next()
     } catch (err) {
@@ -448,6 +452,7 @@ exports.apiReactComment = async (req, res, next) => {
         const down = Boolean(req.query.d)
         const userKey = req.decoded.userKey
         const userId = req.decoded.userId
+        Logger.passApp("apiUpComment").next("userId").put(userId).next("commentId").put(req.query.id).next("up").put(req.query.u).next("down").put(req.query.d).out()
         const result = await reactComment(commentId, userKey, up, down, userId)
         if (result) {
             req.result = result
@@ -465,6 +470,7 @@ exports.apiGetCommentList = async (req, res, next) => {
         const userKey = req.decoded.userKey
         const userId = req.decoded.userId
         const boardId = req.query.bid
+        Logger.passApp("apiGetCommentList").next("userId").put(userId).next("sid").put(req.query.sid).next("bid").put(boardId).out()
         const commentList = await getCommentListByStartId(boardId, startId)
         const endId = await getEndIdOfListInorder(commentList, startId)
         const end = await getEndOfList(commentList)
@@ -483,6 +489,7 @@ exports.apiGetReplyList = async (req, res, next) => {
         const userKey = req.decoded.userKey
         const userId = req.decoded.userId
         const commentId = req.query.cid
+        Logger.passApp("apiGetReplyList").next("userId").put(userId).next("sid").put(req.query.sid).next("cid").put(commentId).out()
         const commentList = await getReplyListByStartId(commentId, startId)
         const endId = await getEndIdOfListInorder(commentList, startId)
         const end = await getEndOfList(commentList)

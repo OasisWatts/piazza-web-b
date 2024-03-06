@@ -160,6 +160,7 @@ exports.apiGetMyBoards = async (req, res, next) => {
     try {
         const startId = Number(req.query.sid)
         const userKey = req.decoded.userKey
+        Logger.passApp("apiGetMyBoards").next("userId").put(req.decoded.userId).next("sid").put(req.query.sid).out()
         const bList = await getMyBoards(startId, userKey)
         const endId = await getEndIdOfList(bList, startId)
         const end = await getEndOfList(bList)
@@ -176,6 +177,7 @@ exports.apiGetMyUpBoards = async (req, res, next) => {
         const startId = Number(req.query.sid)
         const userKey = req.decoded.userKey
         const userId = req.decoded.userId
+        Logger.passApp("apiGetMyUpBoards").next("userId").put(userId).next("sid").put(req.query.sid).out()
         const bList = await getMyUpBoards(startId, userKey)
         const endId = await getEndIdOfList(bList, startId)
         const end = await getEndOfList(bList)
@@ -193,6 +195,7 @@ exports.apiGetMyDownBoards = async (req, res, next) => {
         const startId = Number(req.query.sid)
         const userKey = req.decoded.userKey
         const userId = req.decoded.userId
+        Logger.passApp("apiGetMyDownBoards").next("userId").put(userId).next("sid").put(req.query.sid).out()
         const bList = await getMyDownBoards(startId, userKey)
         const endId = await getEndIdOfList(bList, startId)
         const end = await getEndOfList(bList)
@@ -210,6 +213,7 @@ exports.apiGetTrendBoards = async (req, res, next) => {
         const startId = Number(req.query.sid)
         const userKey = req.decoded.userKey
         const userId = req.decoded.userId
+        Logger.passApp("apiGetTrendBoards").next("userId").put(userId).next("sid").put(req.query.sid).out()
         const bList = await getTrendBoards(startId)
         const end = await getEndOfList(bList)
         const bListWithUpedAndDowned = await getUpedAndDowned(bList, userKey, userId)
@@ -228,6 +232,7 @@ exports.apiGetUrlBoards = async (req, res, next) => {
         const userKey = req.decoded.userKey
         const userId = req.decoded.userId
         const newTk = req.newToken
+        Logger.passApp("apiGetUrlBoards").next("userId").put(userId).next("sid").put(req.query.sid).next("uid").put(req.query.uid).out()
         const bList = await getUrlBoards(startId, urlid)
         const endId = await getEndIdOfList(bList, startId)
         const end = await getEndOfList(bList)
@@ -246,6 +251,7 @@ exports.apiGetMyBoardSearch = async (req, res, next) => {
         const userKey = req.decoded.userKey
         const hashTag = req.query.ht
         const keyword = req.query.kw
+        Logger.passApp("apiGetMyBoardSearch").next("userId").put(req.decoded.userId).next("sid").put(req.query.sid).next("ht").put(hashTag).next("kw").put(keyword).out()
         const bList = await getMyBoardSearch(startId, userKey, hashTag, keyword)
         const endId = await getEndIdOfList(bList, startId)
         const end = await getEndOfList(bList)
@@ -264,6 +270,7 @@ exports.apiGetMyUpSearch = async (req, res, next) => {
         const userId = req.decoded.userId
         const hashTag = req.query.ht
         const keyword = req.query.kw
+        Logger.passApp("apiGetMyUpSearch").next("userId").put(userId).next("sid").put(req.query.sid).next("ht").put(hashTag).next("kw").put(keyword).out()
         const bList = await getMyUpSearch(startId, userKey, hashTag, keyword)
         const endId = await getEndIdOfList(bList, startId)
         const end = await getEndOfList(bList)
@@ -283,6 +290,7 @@ exports.apiGetBoardSearch = async (req, res, next) => {
         const userId = req.decoded.userId
         const hashTag = req.query.ht
         const keyword = req.query.kw
+        Logger.passApp("apiGetBoardSearch").next("userId").put(userId).next("ht").put(hashTag).next("kw").put(keyword).out()
         const bList = await getBoardSearch(startId, hashTag, keyword)
         const endId = await getEndIdOfList(bList, startId)
         const end = await getEndOfList(bList)

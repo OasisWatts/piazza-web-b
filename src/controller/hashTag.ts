@@ -15,6 +15,7 @@ async function getFrequentlyUsedHashTags(userKey: number) {
 exports.apiGetHashTag = async (req, res, next) => {
     try {
         const userKey = req.decoded.userKey
+        Logger.passApp("apiGetHashTag").next("userId").put(req.decoded.userId).out()
         const hashTags = await getFrequentlyUsedHashTags(userKey)
         req.result = { hashTags };
         next();
