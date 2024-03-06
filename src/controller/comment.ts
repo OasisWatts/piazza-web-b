@@ -306,7 +306,6 @@ async function reactComment(commentId: number, userKey: number, up: boolean, dow
 }
 
 async function getReplyListByStartId(commentId: number, replyStartId: number) {
-    Logger.passApp("getReplyListByStartId").next("commentId").put(String(commentId)).next("sid").put(String(replyStartId)).out()
     if (replyStartId == 0) {
         await DB.Manager.increment(Comment, { id: commentId }, "visitNum", 1)
         return await DB.Manager.find(Comment, { order: { id: "DESC" }, take: MAX_LIST_LEN, where: { replied: { id: commentId } } })
@@ -315,7 +314,6 @@ async function getReplyListByStartId(commentId: number, replyStartId: number) {
 }
 
 async function getCommentListByStartId(boardId: number, commentStartId: number) {
-    Logger.passApp("getCommentListByStartId").next("boardId").put(String(boardId)).next("sid").put(String(commentStartId)).out()
     if (commentStartId == 0) {
         await DB.Manager.increment(Board, { id: boardId }, "visitNum", 1)
         return await DB.Manager.find(Comment, { order: { id: "DESC" }, take: MAX_LIST_LEN, where: { board: { id: boardId } } })

@@ -100,7 +100,7 @@ async function signUp(token: string, name: string, signedMethod: string) {
                     const userId = v4();
                     Logger.passApp("signUp").put("userId generated").put(userId).next("name").put(name).next("signedMethod").put(signedMethod).out()
                     DB.Manager.save(User, { name, uid: decodedToken["uid"], email: decodedToken["email"], userId: userId }).then((res) => {
-                        Logger.passApp("signUp").put("user saved").next("userId").put(String(user.userId)).next("name").put(user.name)
+                        Logger.passApp("signUp").put("user saved").next("userId").put(String(userId)).next("name").put(name).out()
                         resolve({ signed: true, name: res.name, userKey: res.key, userId: res.userId })
                         return
                     }).catch((err) => Logger.errorApp(ErrorCode.user_save_failed).put("signUp").put(err).next("uid").put(decodedToken["uid"]).next("email").put(decodeToken["email"]).out())
