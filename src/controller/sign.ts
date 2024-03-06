@@ -77,6 +77,7 @@ async function signIn(token: string, signedMethod: string) {
         return new Promise((resolve, reject) => {
             DB.Manager.findOne(User, { where: { uid: decodedToken["uid"], email: decodedToken["email"] } }).then((user) => {
                 if (user) {
+                    Logger.passApp("signIn").put("signed").next("userId").put(String(user.userId)).next("name").put(user.name)
                     resolve({ signed: true, userKey: user.key, userId: user.userId, name: user.name, image: user.image })
                 } else {
                     Logger.passApp("signIn").put("need to sign up").out() // sign up request 이전의 서버 오류인지, 이후의 어플리케이션 오류인지 파악
@@ -99,6 +100,7 @@ async function signUp(token: string, name: string, signedMethod: string) {
                     const userId = v4();
                     Logger.passApp("signUp").put("userId generated").put(userId).next("name").put(name).next("signedMethod").put(signedMethod).out()
                     DB.Manager.save(User, { name, uid: decodedToken["uid"], email: decodedToken["email"], userId: userId }).then((res) => {
+                        Logger.passApp("signUp").put("user saved").next("userId").put(String(user.userId)).next("name").put(user.name)
                         resolve({ signed: true, name: res.name, userKey: res.key, userId: res.userId })
                         return
                     }).catch((err) => Logger.errorApp(ErrorCode.user_save_failed).put("signUp").put(err).next("uid").put(decodedToken["uid"]).next("email").put(decodeToken["email"]).out())
