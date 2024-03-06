@@ -344,6 +344,9 @@ export class Logger {
                   case LogLevel.SIG_ERROR:
                         console.error(text, ...args)
                         break
+                  case LogLevel.API_ENTER:
+                        console.log(text, ...args)
+                        break
             }
       }
 

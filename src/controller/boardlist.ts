@@ -32,7 +32,6 @@ async function getMyDownBoards(startId: number, userKey: number): Promise<any[]>
 async function getTrendBoards(startId: number): Promise<any[]> {
     const board = await DB.Manager.find(Board, { order: { id: "DESC" }, take: 1 })
     if (board[0]) {
-        console.log("board", board)
         const trendBoards = await DB.Manager.find(Board, { relations: { hashTags: true, url: true }, order: { visitNum: "DESC", id: "DESC" }, take: TREND_LIST_LEN, where: { id: MoreThan(board[0].id - TREND_LIST_FILTER_ID_RANGE), isPublic: true } })
         return trendBoards.slice(MAX_LIST_LEN * startId, MAX_LIST_LEN * (startId + 1))
     } else return []
