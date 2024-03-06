@@ -19,7 +19,7 @@ const MAX_LIST_LEN = SETTINGS.board.listLen
 * @param contents 내용물.
 * @param writerKey 글쓴이 식별자.
 */
-async function commentInsert(boardId: number, writerKey: number, contents: string) {
+async function commentInsert(boardId: number, writerKey: number, contents: string, userId: string) {
     let error = false
     let inserted
     const queryRunner = DB.connection.createQueryRunner()
@@ -38,7 +38,7 @@ async function commentInsert(boardId: number, writerKey: number, contents: strin
     } catch (err) {
         error = true
         await queryRunner.rollbackTransaction()
-        Logger.errorApp(ErrorCode.comment_insert_failed).put("commentInsert").put(err).out()
+        Logger.errorApp(ErrorCode.comment_insert_failed).put("commentInsert").put(err).next("userId").put(userId).next("boardId").put(String(boardId)).out()
     } finally {
         await queryRunner.release()
         if (!error) {
@@ -55,7 +55,7 @@ async function commentInsert(boardId: number, writerKey: number, contents: strin
 * @param contents 내용물.
 * @param writerKey 글쓴이 식별자.
 */
-async function replyInsert(commentId: number, writerKey: number, contents: string) {
+async function replyInsert(commentId: number, writerKey: number, contents: string, userId: string) {
     let error = false
     let inserted
     const comment = await DB.Manager.findOne(Comment, { where: { id: commentId }, relations: ["board"] })
@@ -76,7 +76,7 @@ async function replyInsert(commentId: number, writerKey: number, contents: strin
     } catch (err) {
         error = true
         await queryRunner.rollbackTransaction()
-        Logger.errorApp(ErrorCode.comment_insert_failed).put("replyInsert").put(err).out()
+        Logger.errorApp(ErrorCode.comment_insert_failed).put("replyInsert").put(err).next("userId").put(userId).next("commentId").put(String(commentId)).out()
     } finally {
         await queryRunner.release()
         if (!error) {
@@ -93,19 +93,18 @@ async function replyInsert(commentId: number, writerKey: number, contents: strin
 * @param updaterKey 업데이트하려는 사용자 식별자.
 * @param contents 내용물.
 */
-function commentUpdate(commentId: number, updaterKey: number, contents: string) {
+function commentUpdate(commentId: number, updaterKey: number, contents: string, userId: string) {
     return new Promise((resolve, _) => {
         DB.Manager.update(Comment, { id: commentId, writer: updaterKey }, {
             contents,
             updated: true
         }).then((r) => {
             if (!r.affected) {
-                Logger.errorApp(ErrorCode.comment_update_bad_request).put("commentUpdate").out()
+                Logger.errorApp(ErrorCode.comment_update_bad_request).put("commentUpdate").next("userId").put(userId).out()
             } else {
-                Logger.passApp("commentUpdate").out()
                 resolve(true)
             }
-        }).catch((err) => Logger.errorApp(ErrorCode.comment_update_failed).put("commentUpdate").put(err).out())
+        }).catch((err) => Logger.errorApp(ErrorCode.comment_update_failed).put("commentUpdate").put(err).next("userId").put(userId).next("commentId").put(String(commentId)).out())
     })
 }
 
@@ -113,7 +112,7 @@ function commentUpdate(commentId: number, updaterKey: number, contents: string) 
  * 댓글 삭제.
  * @param commentId 댓글 식별자.
  */
-async function commentDelete(commentId: number, userKey: number) {
+async function commentDelete(commentId: number, userKey: number, userId: string) {
     let error = false
     const comment = await DB.Manager.findOne(Comment, { where: { id: commentId, writer: userKey }, relations: ["board", "replied"] })
     if (!comment) return null
@@ -134,7 +133,7 @@ async function commentDelete(commentId: number, userKey: number) {
     } catch (err) {
         error = true
         await queryRunner.rollbackTransaction()
-        Logger.errorApp(ErrorCode.comment_delete_failed).put("commentDelete").put(err).out()
+        Logger.errorApp(ErrorCode.comment_delete_failed).put("commentDelete").put(err).next("userId").put(userId).next("commentId").put(String(commentId)).out()
     } finally {
         await queryRunner.release()
         if (!error) return true
@@ -143,7 +142,7 @@ async function commentDelete(commentId: number, userKey: number) {
 }
 
 
-async function upComment(commentId: number, userKey: number) {
+async function upComment(commentId: number, userKey: number, userId: string) {
     let error = false
     const queryRunner = DB.connection.createQueryRunner()
     await queryRunner.connect()
@@ -155,14 +154,14 @@ async function upComment(commentId: number, userKey: number) {
     } catch (err) {
         error = true
         await queryRunner.rollbackTransaction()
-        Logger.errorApp(ErrorCode.comment_update_failed).put("upComment").put(err).out()
+        Logger.errorApp(ErrorCode.comment_update_failed).put("upComment").put(err).next("userId").put(userId).next("commentId").put(String(commentId)).out()
     } finally {
         await queryRunner.release()
         if (!error) return { up: 1 }
         else return null
     }
 }
-async function upAndCancelDownComment(commentId: number, userKey: number) {
+async function upAndCancelDownComment(commentId: number, userKey: number, userId: string) {
     let error = false
     const queryRunner = DB.connection.createQueryRunner()
     await queryRunner.connect()
@@ -176,14 +175,14 @@ async function upAndCancelDownComment(commentId: number, userKey: number) {
     } catch (err) {
         error = true
         await queryRunner.rollbackTransaction()
-        Logger.errorApp(ErrorCode.comment_update_failed).put("upAndCancelDownComment").put(err).out()
+        Logger.errorApp(ErrorCode.comment_update_failed).put("upAndCancelDownComment").put(err).next("userId").put(userId).next("commentId").put(String(commentId)).out()
     } finally {
         await queryRunner.release()
         if (!error) return { up: 1, down: -1 }
         else return null
     }
 }
-async function cancelUpComment(commentId: number, userKey: number) {
+async function cancelUpComment(commentId: number, userKey: number, userId: string) {
     let error = false
     const queryRunner = DB.connection.createQueryRunner()
     await queryRunner.connect()
@@ -195,14 +194,14 @@ async function cancelUpComment(commentId: number, userKey: number) {
     } catch (err) {
         error = true
         await queryRunner.rollbackTransaction()
-        Logger.errorApp(ErrorCode.comment_update_failed).put("cancelUpComment").put(err).out()
+        Logger.errorApp(ErrorCode.comment_update_failed).put("cancelUpComment").put(err).next("userId").put(userId).next("commentId").put(String(commentId)).out()
     } finally {
         await queryRunner.release()
         if (!error) return { up: -1 }
         else return null
     }
 }
-async function downComment(commentId: number, userKey: number) {
+async function downComment(commentId: number, userKey: number, userId: string) {
     let error = false
     const queryRunner = DB.connection.createQueryRunner()
     await queryRunner.connect()
@@ -214,14 +213,14 @@ async function downComment(commentId: number, userKey: number) {
     } catch (err) {
         error = true
         await queryRunner.rollbackTransaction()
-        Logger.errorApp(ErrorCode.comment_update_failed).put("downComment").put(err).out()
+        Logger.errorApp(ErrorCode.comment_update_failed).put("downComment").put(err).next("userId").put(userId).next("commentId").put(String(commentId)).out()
     } finally {
         await queryRunner.release()
         if (!error) return { down: 1 }
         else return null
     }
 }
-async function downAndCancelUpComment(commentId: number, userKey: number) {
+async function downAndCancelUpComment(commentId: number, userKey: number, userId: string) {
     let error = false
     const queryRunner = DB.connection.createQueryRunner()
     await queryRunner.connect()
@@ -235,7 +234,7 @@ async function downAndCancelUpComment(commentId: number, userKey: number) {
     } catch (err) {
         error = true
         await queryRunner.rollbackTransaction()
-        Logger.errorApp(ErrorCode.comment_update_failed).put("downAndCancelUpComment").put(err).out()
+        Logger.errorApp(ErrorCode.comment_update_failed).put("downAndCancelUpComment").put(err).next("usreId").put(userId).next("commentId").put(String(commentId)).out()
     } finally {
         await queryRunner.release()
         if (!error) return { down: 1, up: -1 }
@@ -243,7 +242,7 @@ async function downAndCancelUpComment(commentId: number, userKey: number) {
     }
 
 }
-async function cancelDownComment(commentId: number, userKey: number) {
+async function cancelDownComment(commentId: number, userKey: number, userId: string) {
     let error = false
     const queryRunner = DB.connection.createQueryRunner()
     await queryRunner.connect()
@@ -255,7 +254,7 @@ async function cancelDownComment(commentId: number, userKey: number) {
     } catch (err) {
         error = true
         await queryRunner.rollbackTransaction()
-        Logger.errorApp(ErrorCode.comment_update_failed).put("cancelDownComment").put(err).out()
+        Logger.errorApp(ErrorCode.comment_update_failed).put("cancelDownComment").put(err).next("userId").put(userId).next("commentId").put(String(commentId)).out()
     } finally {
         await queryRunner.release()
         if (!error) return { down: -1 }
@@ -267,7 +266,7 @@ async function cancelDownComment(commentId: number, userKey: number) {
 * @param commentId 게시글 식별자.
 * @param userKey 사용자 디비 식별자.
 */
-async function reactComment(commentId: number, userKey: number, up: boolean, down: boolean) {
+async function reactComment(commentId: number, userKey: number, up: boolean, down: boolean, userId: string) {
     const board = await DB.Manager.findOne(Comment, { where: { id: commentId }, select: ["writer"] })
     if (board?.writer === userKey) return null
 
@@ -276,23 +275,23 @@ async function reactComment(commentId: number, userKey: number, up: boolean, dow
 
     if (up) {
         if (uped.length) {
-            return await cancelUpComment(commentId, userKey)
+            return await cancelUpComment(commentId, userKey, userId)
         } else if (!uped.length) {
             if (downed.length) {
-                return await upAndCancelDownComment(commentId, userKey)
+                return await upAndCancelDownComment(commentId, userKey, userId)
             } else {
-                return await upComment(commentId, userKey)
+                return await upComment(commentId, userKey, userId)
             }
         }
     }
     if (down) {
         if (downed.length) {
-            return await cancelDownComment(commentId, userKey)
+            return await cancelDownComment(commentId, userKey, userId)
         } else if (!downed.length) {
             if (uped.length) {
-                return await downAndCancelUpComment(commentId, userKey)
+                return await downAndCancelUpComment(commentId, userKey, userId)
             } else {
-                return await downComment(commentId, userKey)
+                return await downComment(commentId, userKey, userId)
             }
         }
     } return null
@@ -314,7 +313,7 @@ async function getCommentListByStartId(boardId: number, commentStartId: number) 
     else return await DB.Manager.find(Comment, { order: { id: "DESC" }, take: MAX_LIST_LEN, where: { board: { id: boardId }, id: LessThan(commentStartId) } })
 }
 
-async function getUpedAndDowned(commentList: Comment[], userKey: number) {
+async function getUpedAndDowned(commentList: Comment[], userKey: number, userId: string) {
     const promises = []
     for (const commentIdx in commentList) {
         promises.push(
@@ -325,7 +324,7 @@ async function getUpedAndDowned(commentList: Comment[], userKey: number) {
                     else commentList[commentIdx]["uped"] = false
                     resolve(true)
                 } catch (err) {
-                    Logger.errorApp(ErrorCode.board_find_failed).put("getUpedAndDowned").put(err).out()
+                    Logger.errorApp(ErrorCode.board_find_failed).put("getUpedAndDowned").put(err).next("userId").put(userId).next("commentId").put(String(commentList[commentIdx].id)).out()
                     reject(err)
                 }
             })
@@ -338,7 +337,7 @@ async function getUpedAndDowned(commentList: Comment[], userKey: number) {
                     else commentList[commentIdx]["downed"] = false
                     resolve(true)
                 } catch (err) {
-                    Logger.errorApp(ErrorCode.board_find_failed).put("getUpedAndDowned").put(err).out()
+                    Logger.errorApp(ErrorCode.board_find_failed).put("getUpedAndDowned").put(err).next("userId").put(userId).next("commentId").put(String(commentList[commentIdx].id)).out()
                     reject(err)
                 }
             })
@@ -363,6 +362,7 @@ async function getCommentListInfoByStartId(commentList: any[]) {
     for (const comment of commentList) {
         const user = userTable[comment.writer]
         let userName = user ? user.name : "?"
+        let userId = user ? user.userId : "?"
         const commentInfo = {
             id: comment.id,
             date: String(comment.date),
@@ -373,7 +373,8 @@ async function getCommentListInfoByStartId(commentList: any[]) {
             uped: comment.uped,
             downed: comment.downed,
             updated: comment.updated,
-            writer: userName
+            writer: userName,
+            writerId: userId,
         }
         commentInfoList.push(commentInfo)
     }
@@ -383,32 +384,34 @@ async function getCommentListInfoByStartId(commentList: any[]) {
 exports.apiInsertComment = async (req, res, next) => {
     try {
         const userKey = req.decoded.userKey
+        const userId = req.decoded.userId
         const contents = req.body.c
         let boardId = Number(req.body.b)
         if (contents.length > MAX_CONTENTS_LEN) return // TODO front error handling -> comment MAX_CONTENTS_LEN has to be changed in frontent 
-        const result = await commentInsert(boardId, userKey, contents)
+        const result = await commentInsert(boardId, userKey, contents, userId)
         if (result) {
             req.result = result
             next()
         }
     } catch (err) {
-        Logger.errorApp(ErrorCode.api_failed).put("apiInsertComment").put(err).out()
+        Logger.errorApp(ErrorCode.api_failed).put("apiInsertComment").put(err).next("userId").put(req.decoded.userId).out()
     }
 }
 
 exports.apiInsertReply = async (req, res, next) => {
     try {
         const userKey = req.decoded.userKey
+        const userId = req.decoded.userId
         const contents = req.body.c
         let commentId = Number(req.body.cid)
         if (contents.length > MAX_CONTENTS_LEN) return // TODO front error handling -> comment MAX_CONTENTS_LEN has to be changed in frontent 
-        const result = await replyInsert(commentId, userKey, contents)
+        const result = await replyInsert(commentId, userKey, contents, userId)
         if (result) {
             req.result = result
             next()
         }
     } catch (err) {
-        Logger.errorApp(ErrorCode.api_failed).put("apiInsertReply").put(err).out()
+        Logger.errorApp(ErrorCode.api_failed).put("apiInsertReply").put(err).next("userId").put(req.decoded.userId).out()
     }
 }
 
@@ -416,12 +419,13 @@ exports.apiUpdateComment = async (req, res, next) => {
     try {
         const commentId = Number(req.query.id)
         const userKey = req.decoded.userKey
+        const userId = req.decoded.userId
         const contents = req.body.c
         if (contents.length > MAX_CONTENTS_LEN) return
-        const result = await commentUpdate(commentId, userKey, contents)
+        const result = await commentUpdate(commentId, userKey, contents, userId)
         if (result) next()
     } catch (err) {
-        Logger.errorApp(ErrorCode.api_failed).put("apiUpdateComment").put(err).out()
+        Logger.errorApp(ErrorCode.api_failed).put("apiUpdateComment").put(err).next("userId").put(req.decoded.userId).next("commentId").put(req.query.id).out()
     }
 }
 
@@ -429,10 +433,11 @@ exports.apiDeleteComment = async (req, res, next) => {
     try {
         const commentId = Number(req.query.id)
         const userKey = req.decoded.userKey
-        const result = await commentDelete(commentId, userKey)
+        const userId = req.decoded.userId
+        const result = await commentDelete(commentId, userKey, userId)
         if (result) next()
     } catch (err) {
-        Logger.errorApp(ErrorCode.api_failed).put("apiDeleteComment").put(err).out()
+        Logger.errorApp(ErrorCode.api_failed).put("apiDeleteComment").put(err).next("userId").put(req.decoded.userId).next("commentId").put(req.query.id).out()
     }
 }
 
@@ -442,13 +447,14 @@ exports.apiReactComment = async (req, res, next) => {
         const up = Boolean(req.query.u)
         const down = Boolean(req.query.d)
         const userKey = req.decoded.userKey
-        const result = await reactComment(commentId, userKey, up, down)
+        const userId = req.decoded.userId
+        const result = await reactComment(commentId, userKey, up, down, userId)
         if (result) {
             req.result = result
             next()
         }
     } catch (err) {
-        Logger.errorApp(ErrorCode.api_failed).put("apiUpComment").put(err).out()
+        Logger.errorApp(ErrorCode.api_failed).put("apiUpComment").put(err).next("userId").put(req.decoded.userId).next("commentId").put(req.query.id).next("up").put(req.query.u).next("down").put(req.query.d).out()
     }
 }
 
@@ -457,16 +463,17 @@ exports.apiGetCommentList = async (req, res, next) => {
     try {
         const startId = Number(req.query.sid)
         const userKey = req.decoded.userKey
+        const userId = req.decoded.userId
         const boardId = req.query.bid
         const commentList = await getCommentListByStartId(boardId, startId)
         const endId = await getEndIdOfListInorder(commentList, startId)
         const end = await getEndOfList(commentList)
-        const commentListUpedAndDowned = await getUpedAndDowned(commentList, userKey)
+        const commentListUpedAndDowned = await getUpedAndDowned(commentList, userKey, userId)
         const cInfoList = await getCommentListInfoByStartId(commentListUpedAndDowned)
         req.result = { commentList: cInfoList, end, endId }
         next()
     } catch (err) {
-        Logger.errorApp(ErrorCode.api_failed).put("apiGetCommentList").put(err).out()
+        Logger.errorApp(ErrorCode.api_failed).put("apiGetCommentList").put(err).next("userId").put(req.decoded.userId).next("sid").put(req.query.sid).next("bid").put(req.query.bid).out()
     }
 }
 
@@ -474,15 +481,16 @@ exports.apiGetReplyList = async (req, res, next) => {
     try {
         const startId = Number(req.query.sid)
         const userKey = req.decoded.userKey
+        const userId = req.decoded.userId
         const commentId = req.query.cid
         const commentList = await getReplyListByStartId(commentId, startId)
         const endId = await getEndIdOfListInorder(commentList, startId)
         const end = await getEndOfList(commentList)
-        const commentListUpedAndDowned = await getUpedAndDowned(commentList, userKey)
+        const commentListUpedAndDowned = await getUpedAndDowned(commentList, userKey, userId)
         const cInfoList = await getCommentListInfoByStartId(commentListUpedAndDowned)
         req.result = { commentList: cInfoList, end, endId }
         next()
     } catch (err) {
-        Logger.errorApp(ErrorCode.api_failed).put("apiGetReplyList").put(err).out()
+        Logger.errorApp(ErrorCode.api_failed).put("apiGetReplyList").put(err).next("userId").put(req.decoded.userId).next("sid").put(req.query.sid).next("cid").put(req.query.cid).out()
     }
 }

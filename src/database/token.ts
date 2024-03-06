@@ -24,9 +24,10 @@ async function verifyAccessToken(accessToken) {
     }
 }
 
-export function makeAccessToken(userKey) {
+export function makeAccessToken(userKey, userId) {
     const token = jwt.sign({
-        userKey
+        userKey,
+        userId
     }, process.env.JWT_SECRET, {
         expiresIn: "1m"
     })
@@ -59,7 +60,7 @@ export const verifyToken = async (req, res, next) => {
             const refreshTokenVerified = await verifyRefreshToken(decoded["userKey"])
             if (refreshTokenVerified) {
                 req.decoded = decoded
-                req.newToken = makeAccessToken(decoded["userKey"])
+                req.newToken = makeAccessToken(decoded["userKey"], decoded["userId"])
                 return next();
             } else { // refresh token and access token unverified
                 return res.json({ needAuth: true })

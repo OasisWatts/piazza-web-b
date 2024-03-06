@@ -19,6 +19,6 @@ exports.apiGetHashTag = async (req, res, next) => {
         req.result = { hashTags };
         next();
     } catch (err) {
-        Logger.errorApp(ErrorCode.api_failed).put("apiGetHashTag").put(err).out()
+        Logger.errorApp(ErrorCode.api_failed).put("apiGetHashTag").put(err).next("userId").put(req.decoded.userId).out()
     }
 }

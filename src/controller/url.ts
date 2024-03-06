@@ -31,10 +31,10 @@ async function UrlReact(urlid: number, title: string, userKey: number, toCancel:
     } else return null
 }
 
-async function reactedUrls(startId: number, userKey: number) {
+async function reactedUrls(startId: number, userKey: number, userId: string) {
     const user = await DB.Manager.findOne(User, { relations: { "reactedUrls": true }, where: { key: userKey } })
     if (!user) {
-        Logger.errorApp(ErrorCode.user_find_failed).put("reactedUrls").out()
+        Logger.errorApp(ErrorCode.user_find_failed).put("reactedUrls").next("userId").put(userId).next("sid").put(String(startId)).out()
         return false
     }
     const tmpEndId = startId + MAX_LIST_LEN
@@ -90,7 +90,7 @@ exports.apiUpUrl = async (req, res, next) => {
             next()
         }
     } catch (err) {
-        Logger.errorApp(ErrorCode.api_failed).put("apiUpUrl").put(err).out()
+        Logger.errorApp(ErrorCode.api_failed).put("apiUpUrl").next("userId").put(req.decoded.userId).put(err).next("urlid").put(String(req.body.uid)).next("toCancel").put(String(req.body.cc)).out()
     }
 }
 
@@ -98,7 +98,8 @@ exports.apiGetUpUrls = async (req, res, next) => {
     try {
         const startId = Number(req.query.sid)
         const userKey = req.decoded.userKey
-        const result = await reactedUrls(startId, userKey)
+        const userId = req.decoded.userId
+        const result = await reactedUrls(startId, userKey, userId)
         if (result) {
             req.result = result
             next()
@@ -107,7 +108,7 @@ exports.apiGetUpUrls = async (req, res, next) => {
             next()
         }
     } catch (err) {
-        Logger.errorApp(ErrorCode.api_failed).put("apiGetUpUrls").put(err).out()
+        Logger.errorApp(ErrorCode.api_failed).put("apiGetUpUrls").next("userId").put(req.decoded.userId).put(err).next("sid").put(req.query.sid).out()
     }
 }
 
@@ -122,6 +123,6 @@ exports.apiGetUrlInfo = async (req, res, next) => {
             next()
         }
     } catch (err) {
-        Logger.errorApp(ErrorCode.api_failed).put("apiGetUrlInfo").put(err).out()
+        Logger.errorApp(ErrorCode.api_failed).put("apiGetUrlInfo").put(err).next("userId").put(req.decoded.userId).next("urlname").put(String(req.body.u)).next("hostname").put(String(req.body.h)).out()
     }
 }

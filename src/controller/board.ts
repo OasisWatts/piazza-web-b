@@ -18,7 +18,7 @@ const MAX_LIST_LEN = SETTINGS.board.listLen
  * @param writerKey 글쓴이 디비 식별자.
  * @param contents 게시글 내용.
  */
-async function boardInsert(writerKey: number, contents: string, hashTags: string[], urlid: number, title: string, isPublic: boolean) {
+async function boardInsert(writerKey: number, contents: string, hashTags: string[], urlid: number, title: string, isPublic: boolean, userId: string) {
     const user = await DB.Manager.findOne(User, { where: { key: writerKey } })
     let urlObj
     if (urlid) {
@@ -44,7 +44,7 @@ async function boardInsert(writerKey: number, contents: string, hashTags: string
                             if (!hashTagObj) hashTagObj = await DB.Manager.save(HashTag, { text: tag })
                             resolve(hashTagObj)
                         } catch (err) {
-                            Logger.errorApp(ErrorCode.hashtag_failed).put("boardInsert").put(err).out()
+                            Logger.errorApp(ErrorCode.hashtag_failed).put("boardInsert").put(err).next("userId").put(userId).next("tag").put(tag).out()
                             reject(true)
                         }
                     })
@@ -63,7 +63,7 @@ async function boardInsert(writerKey: number, contents: string, hashTags: string
                             }
                             resolve(true)
                         } catch (err) {
-                            Logger.errorApp(ErrorCode.user_hashtag_failed).put("boardInsert").put(err).out()
+                            Logger.errorApp(ErrorCode.user_hashtag_failed).put("boardInsert").put(err).next("userId").put(userId).next("tag").put(tag).out()
                             reject(true)
                         }
                     })
@@ -86,7 +86,7 @@ async function boardInsert(writerKey: number, contents: string, hashTags: string
     } catch (err) {
         error = true
         await queryRunner.rollbackTransaction()
-        Logger.errorApp(ErrorCode.board_insert_failed).put(err).out()
+        Logger.errorApp(ErrorCode.board_insert_failed).put(err).next("userId").put(userId).next("urlid").put(String(urlid)).next("isPublic").put(isPublic ? "true" : "false").out()
     } finally {
         await queryRunner.release()
         if (error) {
@@ -101,7 +101,7 @@ async function boardInsert(writerKey: number, contents: string, hashTags: string
   * @param updaterKey 업데이트하려는 사용자 식별자.
   * @param contents 게시글 내용.
   */
-async function boardUpdate(boardId: number, updaterKey: number, contents: string, hashTags: string[]) {
+async function boardUpdate(boardId: number, updaterKey: number, contents: string, hashTags: string[], userId: string) {
     const user = await DB.Manager.findOne(User, { where: { key: updaterKey } })
     const board = await DB.Manager.findOne(Board, { relations: ["hashTags"], where: { id: boardId } })
     if (!board) return false
@@ -126,7 +126,7 @@ async function boardUpdate(boardId: number, updaterKey: number, contents: string
                                 newHashTags.push(hashTagObj)
                                 resolve(hashTagObj)
                             } catch (err) {
-                                Logger.errorApp(ErrorCode.hashtag_failed).put("boardUpdate").put(err).out()
+                                Logger.errorApp(ErrorCode.hashtag_failed).put("boardUpdate").put(err).next("userId").put(userId).next("tag").put(tag).out()
                                 reject(err)
                             }
                         })
@@ -151,7 +151,7 @@ async function boardUpdate(boardId: number, updaterKey: number, contents: string
                             }
                             resolve(true)
                         } catch (err) {
-                            Logger.errorApp(ErrorCode.user_hashtag_failed).put("boardUpdate").put(err).out()
+                            Logger.errorApp(ErrorCode.user_hashtag_failed).put("boardUpdate").put(err).next("userId").put(userId).next("tag").put(tag).next("userHashTagObj").out()
                             reject(true)
                         }
                     })
@@ -163,7 +163,7 @@ async function boardUpdate(boardId: number, updaterKey: number, contents: string
                         try {
                             const userHashTagObj = await DB.Manager.findOne(UserHashTag, { where: { user: { key: updaterKey }, hashTag: { text: tag.text } } })
                             if (!userHashTagObj) {
-                                Logger.errorApp(ErrorCode.user_hashtag_failed).put("boardUpdate").put("no userHashTag").out()
+                                Logger.errorApp(ErrorCode.user_hashtag_failed).put("boardUpdate").put("no userHashTag").next("userId").put(userId).out()
                             }
                             if (userHashTagObj?.count > 1) {
                                 await DB.Manager.decrement(UserHashTag, userHashTagObj, "count", 1)
@@ -172,7 +172,7 @@ async function boardUpdate(boardId: number, updaterKey: number, contents: string
                             }
                             resolve(true)
                         } catch (err) {
-                            Logger.errorApp(ErrorCode.user_hashtag_failed).put("boardUpdate").put(err).out()
+                            Logger.errorApp(ErrorCode.user_hashtag_failed).put("boardUpdate").put(err).next("userId").put(userId).next("tag").put(tag).out()
                             reject(true)
                         }
                     })
@@ -187,7 +187,7 @@ async function boardUpdate(boardId: number, updaterKey: number, contents: string
     } catch (err) {
         error = true
         await queryRunner.rollbackTransaction()
-        Logger.errorApp(ErrorCode.board_update_failed).put("boardUpdate").put(err).out()
+        Logger.errorApp(ErrorCode.board_update_failed).put("boardUpdate").put(err).next("userId").put(userId).next("boardId").put(String(boardId)).out()
     } finally {
         await queryRunner.release()
         if (error) {
@@ -200,7 +200,7 @@ async function boardUpdate(boardId: number, updaterKey: number, contents: string
 * 게시글 삭제.
 * @param boardId 게시글 식별자.
 */
-async function boardDelete(boardId: number, userKey: number) {
+async function boardDelete(boardId: number, userKey: number, userId: string) {
     const board = await DB.Manager.findOne(Board, { where: { id: boardId }, relations: ["hashTags"] })
     if (!board) return true
     let error = false
@@ -215,7 +215,7 @@ async function boardDelete(boardId: number, userKey: number) {
                     try {
                         const userHashTagObj = await DB.Manager.findOne(UserHashTag, { where: { user: { key: userKey }, hashTag: { text: tag.text } } })
                         if (!userHashTagObj) {
-                            Logger.errorApp(ErrorCode.user_hashtag_failed).put("boardDelete").put("no userHashTag").out()
+                            Logger.errorApp(ErrorCode.user_hashtag_failed).put("boardDelete").put("no userHashTag").next("userId").put(userId).out()
                             reject("no userHashTag")
                         }
                         if (userHashTagObj.count > 1) {
@@ -224,7 +224,7 @@ async function boardDelete(boardId: number, userKey: number) {
                             await DB.Manager.remove(UserHashTag, userHashTagObj)
                         } resolve(true)
                     } catch (err) {
-                        Logger.errorApp(ErrorCode.user_hashtag_failed).put("boardDelete").put(err).out()
+                        Logger.errorApp(ErrorCode.user_hashtag_failed).put("boardDelete").put(err).next("userId").put(userId).next("tag").put(tag.text).out()
                         reject(err)
                     }
                 })
@@ -237,7 +237,7 @@ async function boardDelete(boardId: number, userKey: number) {
     } catch (err) {
         error = true
         await queryRunner.rollbackTransaction()
-        Logger.errorApp(ErrorCode.board_delete_failed).put("boardDelete").put(err).out()
+        Logger.errorApp(ErrorCode.board_delete_failed).put("boardDelete").put(err).next("userId").put(userId).next("boardId").put(String(boardId)).out()
     } finally {
         await queryRunner.release()
         if (error) {
@@ -252,7 +252,7 @@ async function boardDelete(boardId: number, userKey: number) {
   * @param updaterKey 업데이트하려는 사용자 식별자.
   * @param contents 게시글 내용.
   */
-async function boardChangeType(boardId: number, userKey: number, toPublic: boolean) {
+async function boardChangeType(boardId: number, userKey: number, toPublic: boolean, userId: string) {
     let error = false
     try {
         const board = await DB.Manager.findOne(Board, { where: { id: boardId, writer: userKey } })
@@ -263,11 +263,11 @@ async function boardChangeType(boardId: number, userKey: number, toPublic: boole
             })
         } else {
             error = true
-            Logger.errorApp(ErrorCode.board_find_failed).put("boardChangeType").out()
+            Logger.errorApp(ErrorCode.board_find_failed).put("boardChangeType").next("userId").put(userId).next("boardId").put(String(boardId)).next("toPublic").put(toPublic ? "true" : "false").out()
         }
     } catch (err) {
         error = true
-        Logger.errorApp(ErrorCode.board_update_failed).put("boardChangeType").put(err).out()
+        Logger.errorApp(ErrorCode.board_update_failed).put("boardChangeType").put(err).next("userId").put(userId).next("boardId").put(String(boardId)).next("toPublic").put(toPublic ? "true" : "false").out()
         return false
     } finally {
         if (error) return false
@@ -275,7 +275,7 @@ async function boardChangeType(boardId: number, userKey: number, toPublic: boole
     }
 }
 
-async function upBoard(boardId: number, userKey: number) {
+async function upBoard(boardId: number, userKey: number, userId: string) {
     let error = false
     const queryRunner = DB.connection.createQueryRunner()
     await queryRunner.connect()
@@ -287,14 +287,14 @@ async function upBoard(boardId: number, userKey: number) {
     } catch (err) {
         error = true
         await queryRunner.rollbackTransaction()
-        Logger.errorApp(ErrorCode.board_update_failed).put("upBoard").put(err).out()
+        Logger.errorApp(ErrorCode.board_update_failed).put("upBoard").put(err).next("userId").put(userId).next("boardId").put(String(boardId)).out()
     } finally {
         await queryRunner.release()
         if (!error) return { up: 1 }
         else return null
     }
 }
-async function upAndCancelDownBoard(boardId: number, userKey: number) {
+async function upAndCancelDownBoard(boardId: number, userKey: number, userId: string) {
     let error = false
     const queryRunner = DB.connection.createQueryRunner()
     await queryRunner.connect()
@@ -308,14 +308,14 @@ async function upAndCancelDownBoard(boardId: number, userKey: number) {
     } catch (err) {
         error = true
         await queryRunner.rollbackTransaction()
-        Logger.errorApp(ErrorCode.board_update_failed).put("upAndCancelDownBoard").put(err).out()
+        Logger.errorApp(ErrorCode.board_update_failed).put("upAndCancelDownBoard").put(err).next("userId").put(userId).next("boardId").put(String(boardId)).out()
     } finally {
         await queryRunner.release()
         if (!error) return { up: 1, down: -1 }
         else return null
     }
 }
-async function cancelUpBoard(boardId: number, userKey: number) {
+async function cancelUpBoard(boardId: number, userKey: number, userId: string) {
     let error = false
     const queryRunner = DB.connection.createQueryRunner()
     await queryRunner.connect()
@@ -327,14 +327,14 @@ async function cancelUpBoard(boardId: number, userKey: number) {
     } catch (err) {
         error = true
         await queryRunner.rollbackTransaction()
-        Logger.errorApp(ErrorCode.board_update_failed).put("cancelUpBoard").put(err).out()
+        Logger.errorApp(ErrorCode.board_update_failed).put("cancelUpBoard").put(err).next("userId").put(userId).next("boardId").put(String(boardId)).out()
     } finally {
         await queryRunner.release()
         if (!error) return { up: -1 }
         else return null
     }
 }
-async function downBoard(boardId: number, userKey: number) {
+async function downBoard(boardId: number, userKey: number, userId: string) {
     let error = false
     const queryRunner = DB.connection.createQueryRunner()
     await queryRunner.connect()
@@ -346,14 +346,14 @@ async function downBoard(boardId: number, userKey: number) {
     } catch (err) {
         error = true
         await queryRunner.rollbackTransaction()
-        Logger.errorApp(ErrorCode.board_update_failed).put("downBoard").put(err).out()
+        Logger.errorApp(ErrorCode.board_update_failed).put("downBoard").put(err).next("userId").put(userId).next("boardId").put(String(boardId)).out()
     } finally {
         await queryRunner.release()
         if (!error) return { down: 1 }
         else return null
     }
 }
-async function downAndCancelUpBoard(boardId: number, userKey: number) {
+async function downAndCancelUpBoard(boardId: number, userKey: number, userId: string) {
     let error = false
     const queryRunner = DB.connection.createQueryRunner()
     await queryRunner.connect()
@@ -367,7 +367,7 @@ async function downAndCancelUpBoard(boardId: number, userKey: number) {
     } catch (err) {
         error = true
         await queryRunner.rollbackTransaction()
-        Logger.errorApp(ErrorCode.board_update_failed).put("downAndCancelUpBoard").put(err).out()
+        Logger.errorApp(ErrorCode.board_update_failed).put("downAndCancelUpBoard").put(err).next("userId").put(userId).next("boardId").put(String(boardId)).out()
     } finally {
         await queryRunner.release()
         if (!error) return { down: 1, up: -1 }
@@ -375,7 +375,7 @@ async function downAndCancelUpBoard(boardId: number, userKey: number) {
     }
 
 }
-async function cancelDownBoard(boardId: number, userKey: number) {
+async function cancelDownBoard(boardId: number, userKey: number, userId: string) {
     let error = false
     const queryRunner = DB.connection.createQueryRunner()
     await queryRunner.connect()
@@ -387,7 +387,7 @@ async function cancelDownBoard(boardId: number, userKey: number) {
     } catch (err) {
         error = true
         await queryRunner.rollbackTransaction()
-        Logger.errorApp(ErrorCode.board_update_failed).put("cancelDownBoard").put(err).out()
+        Logger.errorApp(ErrorCode.board_update_failed).put("cancelDownBoard").put(err).next("userId").put(userId).next("boardId").put(String(boardId)).out()
     } finally {
         await queryRunner.release()
         if (!error) return { down: -1 }
@@ -399,7 +399,7 @@ async function cancelDownBoard(boardId: number, userKey: number) {
 * @param boardId 게시글 식별자.
 * @param userKey 사용자 디비 식별자.
 */
-async function reactBoard(boardId: number, userKey: number, up: boolean, down: boolean) {
+async function reactBoard(boardId: number, userKey: number, up: boolean, down: boolean, userId: string) {
     const board = await DB.Manager.findOne(Board, { where: { id: boardId }, select: ["writer"] })
     if (board?.writer === userKey) return null
 
@@ -408,23 +408,23 @@ async function reactBoard(boardId: number, userKey: number, up: boolean, down: b
 
     if (up) {
         if (uped.length) {
-            return await cancelUpBoard(boardId, userKey)
+            return await cancelUpBoard(boardId, userKey, userId)
         } else if (!uped.length) {
             if (downed.length) {
-                return await upAndCancelDownBoard(boardId, userKey)
+                return await upAndCancelDownBoard(boardId, userKey, userId)
             } else {
-                return await upBoard(boardId, userKey)
+                return await upBoard(boardId, userKey, userId)
             }
         }
     }
     if (down) {
         if (downed.length) {
-            return await cancelDownBoard(boardId, userKey)
+            return await cancelDownBoard(boardId, userKey, userId)
         } else if (!downed.length) {
             if (uped.length) {
-                return await downAndCancelUpBoard(boardId, userKey)
+                return await downAndCancelUpBoard(boardId, userKey, userId)
             } else {
-                return await downBoard(boardId, userKey)
+                return await downBoard(boardId, userKey, userId)
             }
         }
     } return null
@@ -451,6 +451,7 @@ export async function getEndIdOfListInorder(list, startId) {
 exports.apiInsertBoard = async (req, res, next) => {
     try {
         const userKey = req.decoded.userKey
+        const userId = req.decoded.userId
         const contents = req.body.c
         let hashTagText = req.body.h
         let hashTags = []
@@ -466,10 +467,10 @@ exports.apiInsertBoard = async (req, res, next) => {
         if (isNaN(uid)) uid = null
         if (title === "") title = null
         if (req.body.p === "") isPublic = false
-        const result = await DB.Manager.transaction(() => boardInsert(userKey, contents, hashTags, uid, title, isPublic))
+        const result = await DB.Manager.transaction(() => boardInsert(userKey, contents, hashTags, uid, title, isPublic, userId))
         if (result) next()
     } catch (err) {
-        Logger.errorApp(ErrorCode.api_failed).put("apiInsertBoard").put(err).out()
+        Logger.errorApp(ErrorCode.api_failed).put("apiInsertBoard").put(err).next("userId").put(req.decoded.userId).out()
     }
 }
 
@@ -477,16 +478,17 @@ exports.apiUpdateBoard = async (req, res, next) => {
     try {
         const boardId = Number(req.query.id)
         const userKey = req.decoded.userKey
+        const userId = req.decoded.userId
         const contents = req.body.c
         if (contents.length > MAX_CONTENTS_LEN) return
         let hashTagText = req.body.h
         const hashTags = hashTagText.split("#")
         if (hashTags.length > MAX_HASH_TAG_NUM) return
         if (hashTags.some((tag) => tag > MAX_HASH_TAG_LEN || tag.trim().length < 1)) return
-        const result = await boardUpdate(boardId, userKey, contents, hashTags)
+        const result = await boardUpdate(boardId, userKey, contents, hashTags, userId)
         if (result) next()
     } catch (err) {
-        Logger.errorApp(ErrorCode.api_failed).put("apiUpdateBoard").put(err).out()
+        Logger.errorApp(ErrorCode.api_failed).put("apiUpdateBoard").put(err).next("userId").put(req.decoded.userId).next("boardId").put(req.query.id).out()
     }
 }
 
@@ -494,10 +496,11 @@ exports.apiDeleteBoard = async (req, res, next) => {
     try {
         const boardId = Number(req.query.id)
         const userKey = req.decoded.userKey
-        const result = await boardDelete(boardId, userKey)
+        const userId = req.decoded.userId
+        const result = await boardDelete(boardId, userKey, userId)
         if (result) next()
     } catch (err) {
-        Logger.errorApp(ErrorCode.api_failed).put("apiDeleteBoard").put(err).out()
+        Logger.errorApp(ErrorCode.api_failed).put("apiDeleteBoard").put(err).next("userId").put(req.decoded.userId).next("boardId").put(req.query.id).out()
     }
 }
 
@@ -506,10 +509,11 @@ exports.apiChangeBoardType = async (req, res, next) => {
         const boardId = Number(req.query.id)
         const forPublic = Boolean(req.query.pb)
         const userKey = req.decoded.userKey
-        const result = await boardChangeType(boardId, userKey, forPublic)
+        const userId = req.decoded.userId
+        const result = await boardChangeType(boardId, userKey, forPublic, userId)
         if (result) next()
     } catch (err) {
-        Logger.errorApp(ErrorCode.api_failed).put("apiChangeBoardType").put(err).out()
+        Logger.errorApp(ErrorCode.api_failed).put("apiChangeBoardType").put(err).next("userId").put(req.decoded.userId).next("boardId").put(req.query.id).next("forPublic").put(req.query.pb).out()
     }
 }
 
@@ -519,12 +523,13 @@ exports.apiReactBoard = async (req, res, next) => {
         const up = Boolean(req.query.u)
         const down = Boolean(req.query.d)
         const userKey = req.decoded.userKey
-        const result = await DB.Manager.transaction(() => reactBoard(boardId, userKey, up, down))
+        const userId = req.decoded.userId
+        const result = await DB.Manager.transaction(() => reactBoard(boardId, userKey, up, down, userId))
         if (result) {
             req.result = result
             next()
         }
     } catch (err) {
-        Logger.errorApp(ErrorCode.api_failed).put("apiUpBoard").put(err).out()
+        Logger.errorApp(ErrorCode.api_failed).put("apiUpBoard").put(err).next("userId").put(req.decoded.userId).next("boardId").put(req.query.id).next("up").put(req.query.u).next("down").put(req.query.d).out()
     }
 }

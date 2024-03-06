@@ -41,9 +41,10 @@ export default class DB {
                   supportBigNumbers: true,
                   bigNumberStrings: false,
                   ...SETTINGS.database,
-                  synchronize:false, // synchronize: true여야 수정 entity가 반영
+                  synchronize: true, // synchronize: true여야 수정 entity가 반영
                   entities,
                   cache: true,
+                  charset: 'utf8mb4'
                   // logging: true,
                   // ssl: SSL_OPTIONS,
             })

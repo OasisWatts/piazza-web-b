@@ -9,13 +9,17 @@ export default class User {
       @PrimaryGeneratedColumn("increment")
       public key!: number
 
-      /** 아이디 */
+      /** 소셜 로그인 식별자 */
       @Column({ type: "varchar" })
       public uid!: string
 
-      /** 아이디 */
+      /** 이름 */
       @Column({ type: "varchar" })
       public name!: string
+
+      /** 아이디 */
+      @Column({ type: "varchar" })
+      public userId!: string
 
       /** 이메일 */
       @Column({ type: "varchar", nullable: true })

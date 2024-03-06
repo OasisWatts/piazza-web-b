@@ -7,6 +7,7 @@ import { OAuth2Client } from 'google-auth-library'
 import verifyAppleToken from "verify-apple-id-token"
 import { getAuth } from "firebase-admin/auth"
 import axios from "axios"
+import { v4 } from "uuid"
 
 const { makeAccessToken, makeRefreshToken } = require("database/token")
 
@@ -29,7 +30,7 @@ function decodeToken(idToken: string, signedMethod: string) {
                 const payload = ticket.getPayload();
                 resolve({ uid: payload.sub, email: payload.email })
             }).catch((error) => {
-                Logger.errorApp(ErrorCode.token_failed).put(error).out()
+                Logger.errorApp(ErrorCode.token_failed).put("google").put(error).out()
             })
         })
     } else if (signedMethod == "facebook") {
@@ -38,7 +39,7 @@ function decodeToken(idToken: string, signedMethod: string) {
                 `https://graph.facebook.com/me?access_token=${idToken}`).then((res) => {
                     resolve({ uid: res.data.id, email: res.data.email })
                 }).catch((error) => {
-                    Logger.errorApp(ErrorCode.token_failed).put(error).out()
+                    Logger.errorApp(ErrorCode.token_failed).put("facebook").put(error).out()
                 })
         });
     } else if (signedMethod == "apple") {
@@ -49,7 +50,7 @@ function decodeToken(idToken: string, signedMethod: string) {
             }).then((res) => {
                 resolve({ uid: res.sub, email: res.email })
             }).catch((error) => {
-                Logger.errorApp(ErrorCode.token_failed).put(error).out()
+                Logger.errorApp(ErrorCode.token_failed).put("apple").put(error).out()
             })
         })
     } else if (signedMethod == "email") {
@@ -60,7 +61,7 @@ function decodeToken(idToken: string, signedMethod: string) {
                     resolve({ uid: decodedToken.uid, email: decodedToken.email })
                 })
                 .catch((error) => {
-                    Logger.errorApp(ErrorCode.token_failed).put(error).out()
+                    Logger.errorApp(ErrorCode.token_failed).put("email").put(error).out()
                 })
         })
     } else return null
@@ -74,13 +75,12 @@ async function signIn(token: string, signedMethod: string) {
         return new Promise((resolve, reject) => {
             DB.Manager.findOne(User, { where: { uid: decodedToken["uid"], email: decodedToken["email"] } }).then((user) => {
                 if (user) {
-                    Logger.passApp("signIn").put("complete").out()
-                    resolve({ signed: true, userKey: user.key, name: user.name, image: user.image })
+                    resolve({ signed: true, userKey: user.key, userId: user.userId, name: user.name, image: user.image })
                 } else {
-                    Logger.passApp("signIn").put("need to sign up").out()
+                    Logger.passApp("signIn").put("need to sign up").out() // sign up request 이전의 서버 오류인지, 이후의 어플리케이션 오류인지 파악
                     resolve({ needSignUp: true })
                 }
-            }).catch((err) => Logger.errorApp(ErrorCode.user_find_failed).put("signIn").put(err).out())
+            }).catch((err) => Logger.errorApp(ErrorCode.user_find_failed).put("signIn").put(err).next("uid").put(decodedToken["uid"]).next("email").put(decodeToken["email"]).out())
         })
     } else return null
 }
@@ -93,11 +93,11 @@ async function signUp(token: string, name: string, signedMethod: string) {
         return new Promise((resolve, reject) => {
             DB.Manager.findOne(User, { where: { uid: decodedToken["uid"], email: decodedToken["email"] } }).then((user) => {
                 if (!user) {
-                    DB.Manager.save(User, { name, uid: decodedToken["uid"], email: decodedToken["email"] }).then((res) => {
-                        Logger.passApp("signUp").put("complete").out()
-                        resolve({ signed: true, userKey: res.key })
+                    const userId = v4();
+                    DB.Manager.save(User, { name, uid: decodedToken["uid"], email: decodedToken["email"], userId: userId }).then((res) => {
+                        resolve({ signed: true, name: res.name, userKey: res.key, userId: res.userId })
                         return
-                    }).catch((err) => Logger.errorApp(ErrorCode.user_save_failed).put("signUp").put(err).out())
+                    }).catch((err) => Logger.errorApp(ErrorCode.user_save_failed).put("signUp").put(err).next("uid").put(decodedToken["uid"]).next("email").put(decodeToken["email"]).out())
                 } else {
                     resolve({ signed: false, already_exists: true })
                 }
@@ -113,15 +113,15 @@ exports.apiSignIn = async (req, res, next) => {
         const result: any = await signIn(token, signedMethod)
         if (result) {
             if (result.signed) {
-                const token = makeAccessToken(result.userKey)
+                const token = makeAccessToken(result.userKey, result.userId)
                 await makeRefreshToken(result.userKey)
-                res.json({ signed: true, name: result.name, image: result.image, token })
+                res.json({ signed: true, name: result.name, image: result.image, userId: result.userId, token })
             } else if (result.needSignUp) {
                 res.json({ needSignUp: true })
             } else res.json({ signed: false })
         } else res.json({ signed: false })
     } catch (err) {
-        Logger.errorApp(ErrorCode.api_failed).put("apiSignIn").put(err).out()
+        Logger.errorApp(ErrorCode.api_failed).put("apiSignIn").put(err).next("signedMethod").put(String(req.body.m)).out()
     }
 }
 
@@ -133,13 +133,13 @@ exports.apiSignUp = async (req, res, next) => {
         if (name.length < 2) return
         const result: any = await signUp(token, name, signedMethod)
         if (result.signed) {
-            const token = makeAccessToken(result.userKey)
+            const token = makeAccessToken(result.userKey, result.useId)
             await makeRefreshToken(result.userKey)
-            res.json({ signed: true, name: result.name, image: result.image, token })
+            res.json({ signed: true, name: result.name, image: result.image, userId: result.userId, token })
         } else if (result.already_exists) {
             res.json({ signed: false, already_exists: true })
         } else res.json({ signed: false })
     } catch (err) {
-        Logger.errorApp(ErrorCode.api_failed).put("apiSignUp").put(err).out()
+        Logger.errorApp(ErrorCode.api_failed).put("apiSignUp").put(err).next("signedMethod").put(String(req.body.m)).next("name").put(String(req.body.n)).out()
     }
 }

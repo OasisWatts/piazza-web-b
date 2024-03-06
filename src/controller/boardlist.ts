@@ -71,7 +71,7 @@ async function getBoardSearch(startId: number, hashTag: string, keyword: string)
     } return []
 }
 
-async function getUpedAndDowned(bList: Board[], userKey: number) {
+async function getUpedAndDowned(bList: Board[], userKey: number, userId: string) {
     const promises = []
     for (const bid in bList) {
         promises.push(
@@ -82,7 +82,7 @@ async function getUpedAndDowned(bList: Board[], userKey: number) {
                     else bList[bid]["uped"] = false
                     resolve(true)
                 } catch (err) {
-                    Logger.errorApp(ErrorCode.board_find_failed).put("getUpedAndDowned").put(err).out()
+                    Logger.errorApp(ErrorCode.board_find_failed).put("getUpedAndDowned").put(err).next("userId").put(userId).next("boardId").put(String(bList[bid].id)).out()
                     reject(err)
                 }
             })
@@ -95,7 +95,7 @@ async function getUpedAndDowned(bList: Board[], userKey: number) {
                     else bList[bid]["downed"] = false
                     resolve(true)
                 } catch (err) {
-                    Logger.errorApp(ErrorCode.board_find_failed).put("getUpedAndDowned").put(err).out()
+                    Logger.errorApp(ErrorCode.board_find_failed).put("getUpedAndDowned").put(err).next("userId").next("boardId").put(String(bList[bid].id)).put(userId).out()
                     reject(err)
                 }
             })
@@ -129,9 +129,11 @@ async function getAllBoardInfos(bList) {
         if (item == null) continue
         const user: any = userTable[item.writer]
         let userName = user ? user.name : "?"
+        let userId = user ? user.userId : "?"
         const board = {
             id: item.id,
             writer: userName,
+            writerId: userId,
             uid: item.url?.id,
             url: item.url?.url,
             urlHostname: item.url?.hostname,
@@ -165,7 +167,7 @@ exports.apiGetMyBoards = async (req, res, next) => {
         req.result = { boardList: bInfoList, end, endId }
         next()
     } catch (err) {
-        Logger.errorApp(ErrorCode.api_failed).put("apiGetMyBoards").put(err).out()
+        Logger.errorApp(ErrorCode.api_failed).put("apiGetMyBoards").put(err).next("userId").put(req.decoded.userId).next("sid").put(req.query.sid).out()
     }
 }
 
@@ -173,15 +175,16 @@ exports.apiGetMyUpBoards = async (req, res, next) => {
     try {
         const startId = Number(req.query.sid)
         const userKey = req.decoded.userKey
+        const userId = req.decoded.userId
         const bList = await getMyUpBoards(startId, userKey)
         const endId = await getEndIdOfList(bList, startId)
         const end = await getEndOfList(bList)
-        const bListWithUpedAndDowned = await getUpedAndDowned(bList, userKey)
+        const bListWithUpedAndDowned = await getUpedAndDowned(bList, userKey, userId)
         const bInfoList = await getAllBoardInfos(bListWithUpedAndDowned)
         req.result = { boardList: bInfoList, end, endId }
         next()
     } catch (err) {
-        Logger.errorApp(ErrorCode.api_failed).put("apiGetMyUpBoards").put(err).out()
+        Logger.errorApp(ErrorCode.api_failed).put("apiGetMyUpBoards").put(err).next("userId").put(req.decoded.userId).next("sid").put(req.query.sid).out()
     }
 }
 
@@ -189,15 +192,16 @@ exports.apiGetMyDownBoards = async (req, res, next) => {
     try {
         const startId = Number(req.query.sid)
         const userKey = req.decoded.userKey
+        const userId = req.decoded.userId
         const bList = await getMyDownBoards(startId, userKey)
         const endId = await getEndIdOfList(bList, startId)
         const end = await getEndOfList(bList)
-        const bListWithUpedAndDowned = await getUpedAndDowned(bList, userKey)
+        const bListWithUpedAndDowned = await getUpedAndDowned(bList, userKey, userId)
         const bInfoList = await getAllBoardInfos(bListWithUpedAndDowned)
         req.result = { boardList: bInfoList, end, endId }
         next()
     } catch (err) {
-        Logger.errorApp(ErrorCode.api_failed).put("apiGetMyDownBoards").put(err).out()
+        Logger.errorApp(ErrorCode.api_failed).put("apiGetMyDownBoards").put(err).next("userId").put(req.decoded.userId).next("sid").put(req.query.sid).out()
     }
 }
 
@@ -205,14 +209,15 @@ exports.apiGetTrendBoards = async (req, res, next) => {
     try {
         const startId = Number(req.query.sid)
         const userKey = req.decoded.userKey
+        const userId = req.decoded.userId
         const bList = await getTrendBoards(startId)
         const end = await getEndOfList(bList)
-        const bListWithUpedAndDowned = await getUpedAndDowned(bList, userKey)
+        const bListWithUpedAndDowned = await getUpedAndDowned(bList, userKey, userId)
         const bInfoList = await getAllBoardInfos(bListWithUpedAndDowned)
         req.result = { boardList: bInfoList, end, endId: startId + 1 }
         next()
     } catch (err) {
-        Logger.errorApp(ErrorCode.api_failed).put("apiGetTrendBoards").put(err).out()
+        Logger.errorApp(ErrorCode.api_failed).put("apiGetTrendBoards").put(err).next("userId").put(req.decoded.userId).next("sid").put(req.query.sid).out()
     }
 }
 
@@ -221,16 +226,17 @@ exports.apiGetUrlBoards = async (req, res, next) => {
         const startId = Number(req.query.sid)
         const urlid = Number(req.query.uid)
         const userKey = req.decoded.userKey
+        const userId = req.decoded.userId
         const newTk = req.newToken
         const bList = await getUrlBoards(startId, urlid)
         const endId = await getEndIdOfList(bList, startId)
         const end = await getEndOfList(bList)
-        const bListWithUpedAndDowned = await getUpedAndDowned(bList, userKey)
+        const bListWithUpedAndDowned = await getUpedAndDowned(bList, userKey, userId)
         const bInfoList = await getAllBoardInfos(bListWithUpedAndDowned)
         req.result = { boardList: bInfoList, end, endId, newTk }
         next()
     } catch (err) {
-        Logger.errorApp(ErrorCode.api_failed).put("apiGetUrlBoards").put(err).out()
+        Logger.errorApp(ErrorCode.api_failed).put("apiGetUrlBoards").put(err).next("userId").put(req.decoded.userId).next("sid").put(req.query.sid).next("uid").put(req.query.uid).out()
     }
 }
 
@@ -247,7 +253,7 @@ exports.apiGetMyBoardSearch = async (req, res, next) => {
         req.result = { boardList: bInfoList, end, endId }
         next()
     } catch (err) {
-        Logger.errorApp(ErrorCode.api_failed).put("apiGetMyBoardSearch").put(err).out()
+        Logger.errorApp(ErrorCode.api_failed).put("apiGetMyBoardSearch").put(err).next("userId").put(req.decoded.userId).next("sid").put(req.query.sid).next("ht").put(req.query.ht).next("kw").put(req.query.kw).out()
     }
 }
 
@@ -255,17 +261,18 @@ exports.apiGetMyUpSearch = async (req, res, next) => {
     try {
         const startId = Number(req.query.sid)
         const userKey = req.decoded.userKey
+        const userId = req.decoded.userId
         const hashTag = req.query.ht
         const keyword = req.query.kw
         const bList = await getMyUpSearch(startId, userKey, hashTag, keyword)
         const endId = await getEndIdOfList(bList, startId)
         const end = await getEndOfList(bList)
-        const bListWithUpedAndDowned = await getUpedAndDowned(bList, userKey)
+        const bListWithUpedAndDowned = await getUpedAndDowned(bList, userKey, userId)
         const bInfoList = await getAllBoardInfos(bListWithUpedAndDowned)
         req.result = { boardList: bInfoList, end, endId }
         next()
     } catch (err) {
-        Logger.errorApp(ErrorCode.api_failed).put("apiGetMyUpSearch").put(err).out()
+        Logger.errorApp(ErrorCode.api_failed).put("apiGetMyUpSearch").put(err).next("userId").put(req.decoded.userId).next("sid").put(req.query.sid).next("ht").put(req.query.ht).next("kw").put(req.query.kw).out()
     }
 }
 
@@ -273,16 +280,17 @@ exports.apiGetBoardSearch = async (req, res, next) => {
     try {
         const startId = Number(req.query.sid)
         const userKey = req.decoded.userKey
+        const userId = req.decoded.userId
         const hashTag = req.query.ht
         const keyword = req.query.kw
         const bList = await getBoardSearch(startId, hashTag, keyword)
         const endId = await getEndIdOfList(bList, startId)
         const end = await getEndOfList(bList)
-        const bListWithUpedAndDowned = await getUpedAndDowned(bList, userKey)
+        const bListWithUpedAndDowned = await getUpedAndDowned(bList, userKey, userId)
         const bInfoList = await getAllBoardInfos(bListWithUpedAndDowned)
         req.result = { boardList: bInfoList, end, endId }
         next()
     } catch (err) {
-        Logger.errorApp(ErrorCode.api_failed).put("apiGetBoardSearch").put(err).out()
+        Logger.errorApp(ErrorCode.api_failed).put("apiGetBoardSearch").put(err).next("userId").put(req.decoded.userId).next("ht").put(req.query.ht).next("kw").put(req.query.kw).out()
     }
 }

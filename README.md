@@ -42,17 +42,20 @@
 ---
 
 ## 세팅
-### mysql backup
+- 주 사용 directory: /home/docker/
+- webrownie node source code directory: /home/docker/brownie-back
+- 가동 방식: 두 개의 webrownie backend node server가 nginx로 로드 밸런싱되며, mysql이 별개의 container로 돌아가고 있음. 두 개의 webrownie backend node server 각각이 한 mysql과 통신
+#### mysql backup
 - backup sql file directory: /home/mysql_backup/sql
 - backup bash file: /home/mysql_backup/backup.sh
 - backup 정책: 1시간 마다, 5일치 저장
 - 참고 file: /etc/crontab
 
-### ssl certificate
+#### ssl certificate
 - 생성할 때, nginx_proxy_manager 이용
 - 갱신 방법: 172.233.129.121:81에 접속해, ssl certificated 갱신
 
-### log
+#### log
 - container 자동 생성
 - log directory: /var/lib/docker/containers/{container ID}/
 - logrotate 정책: 1파일 당 일주일분, 최대 12개 파일을 압축파일 형태로 저장
