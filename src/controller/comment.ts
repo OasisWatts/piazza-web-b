@@ -125,8 +125,10 @@ async function commentDelete(commentId: number, userKey: number, userId: string)
     try {
         await queryRunner.manager.delete(Comment, { id: commentId, writer: userKey })
         if (isReply) {
+            Logger.passApp("commentDelete").put("isReply").next("commentId").put(String(commentId)).next("userId").put(userId).out()
             await queryRunner.manager.decrement(Comment, { id: repliedId }, "replyNum", 1)
         } else if (boardId != null) {
+            Logger.passApp("commentDelete").put("has boardId").next("commentId").put(String(commentId)).next("userId").put(userId).out()
             await queryRunner.manager.decrement(Board, { id: boardId }, "commentNum", 1)
         }
         await queryRunner.commitTransaction()
@@ -143,6 +145,7 @@ async function commentDelete(commentId: number, userKey: number, userId: string)
 
 
 async function upComment(commentId: number, userKey: number, userId: string) {
+    Logger.passApp("upComment").next("commentId").put(String(commentId)).next("userId").put(userId).out()
     let error = false
     const queryRunner = DB.connection.createQueryRunner()
     await queryRunner.connect()
@@ -162,6 +165,7 @@ async function upComment(commentId: number, userKey: number, userId: string) {
     }
 }
 async function upAndCancelDownComment(commentId: number, userKey: number, userId: string) {
+    Logger.passApp("upAndCancelDownComment").next("commentId").put(String(commentId)).next("userId").put(userId).out()
     let error = false
     const queryRunner = DB.connection.createQueryRunner()
     await queryRunner.connect()
@@ -183,6 +187,7 @@ async function upAndCancelDownComment(commentId: number, userKey: number, userId
     }
 }
 async function cancelUpComment(commentId: number, userKey: number, userId: string) {
+    Logger.passApp("cancelUpComment").next("commentId").put(String(commentId)).next("userId").put(userId).out()
     let error = false
     const queryRunner = DB.connection.createQueryRunner()
     await queryRunner.connect()
@@ -202,6 +207,7 @@ async function cancelUpComment(commentId: number, userKey: number, userId: strin
     }
 }
 async function downComment(commentId: number, userKey: number, userId: string) {
+    Logger.passApp("downComment").next("commentId").put(String(commentId)).next("userId").put(userId).out()
     let error = false
     const queryRunner = DB.connection.createQueryRunner()
     await queryRunner.connect()
@@ -221,6 +227,7 @@ async function downComment(commentId: number, userKey: number, userId: string) {
     }
 }
 async function downAndCancelUpComment(commentId: number, userKey: number, userId: string) {
+    Logger.passApp("downAndCancelUpComment").next("commentId").put(String(commentId)).next("userId").put(userId).out()
     let error = false
     const queryRunner = DB.connection.createQueryRunner()
     await queryRunner.connect()
@@ -243,6 +250,7 @@ async function downAndCancelUpComment(commentId: number, userKey: number, userId
 
 }
 async function cancelDownComment(commentId: number, userKey: number, userId: string) {
+    Logger.passApp("cancelDownComment").next("commentId").put(String(commentId)).next("userId").put(userId).out()
     let error = false
     const queryRunner = DB.connection.createQueryRunner()
     await queryRunner.connect()
@@ -298,6 +306,7 @@ async function reactComment(commentId: number, userKey: number, up: boolean, dow
 }
 
 async function getReplyListByStartId(commentId: number, replyStartId: number) {
+    Logger.passApp("getReplyListByStartId").next("commentId").put(String(commentId)).next("sid").put(String(replyStartId)).out()
     if (replyStartId == 0) {
         await DB.Manager.increment(Comment, { id: commentId }, "visitNum", 1)
         return await DB.Manager.find(Comment, { order: { id: "DESC" }, take: MAX_LIST_LEN, where: { replied: { id: commentId } } })
@@ -306,6 +315,7 @@ async function getReplyListByStartId(commentId: number, replyStartId: number) {
 }
 
 async function getCommentListByStartId(boardId: number, commentStartId: number) {
+    Logger.passApp("getCommentListByStartId").next("boardId").put(String(boardId)).next("sid").put(String(commentStartId)).out()
     if (commentStartId == 0) {
         await DB.Manager.increment(Board, { id: boardId }, "visitNum", 1)
         return await DB.Manager.find(Comment, { order: { id: "DESC" }, take: MAX_LIST_LEN, where: { board: { id: boardId } } })
@@ -314,6 +324,7 @@ async function getCommentListByStartId(boardId: number, commentStartId: number) 
 }
 
 async function getUpedAndDowned(commentList: Comment[], userKey: number, userId: string) {
+    Logger.passApp("getUpedAndDowned").next("userId").put(userId).out()
     const promises = []
     for (const commentIdx in commentList) {
         promises.push(
@@ -348,6 +359,7 @@ async function getUpedAndDowned(commentList: Comment[], userKey: number, userId:
 }
 
 async function getCommentListInfoByStartId(commentList: any[]) {
+    Logger.passApp("getCommentListInfoByStartId").out()
     const userWhere: { key: number }[] = []
     for (const comment of commentList) {
         userWhere.push({
@@ -387,7 +399,7 @@ exports.apiInsertComment = async (req, res, next) => {
         const userId = req.decoded.userId
         const contents = req.body.c
         let boardId = Number(req.body.b)
-        Logger.passApp("apiInsertComment").next("userId").put(userId).out()
+        Logger.enterApi("apiInsertComment").next("userId").put(userId).out()
         if (contents.length > MAX_CONTENTS_LEN) return // TODO front error handling -> comment MAX_CONTENTS_LEN has to be changed in frontent 
         const result = await commentInsert(boardId, userKey, contents, userId)
         if (result) {
@@ -405,7 +417,7 @@ exports.apiInsertReply = async (req, res, next) => {
         const userId = req.decoded.userId
         const contents = req.body.c
         let commentId = Number(req.body.cid)
-        Logger.passApp("apiInsertReply").next("userId").put(userId).out()
+        Logger.enterApi("apiInsertReply").next("userId").put(userId).out()
         if (contents.length > MAX_CONTENTS_LEN) return // TODO front error handling -> comment MAX_CONTENTS_LEN has to be changed in frontent 
         const result = await replyInsert(commentId, userKey, contents, userId)
         if (result) {
@@ -423,7 +435,7 @@ exports.apiUpdateComment = async (req, res, next) => {
         const userKey = req.decoded.userKey
         const userId = req.decoded.userId
         const contents = req.body.c
-        Logger.passApp("apiUpdateComment").next("userId").put(userId).next("commentId").put(req.query.id).out()
+        Logger.enterApi("apiUpdateComment").next("userId").put(userId).next("commentId").put(req.query.id).out()
         if (contents.length > MAX_CONTENTS_LEN) return
         const result = await commentUpdate(commentId, userKey, contents, userId)
         if (result) next()
@@ -437,7 +449,7 @@ exports.apiDeleteComment = async (req, res, next) => {
         const commentId = Number(req.query.id)
         const userKey = req.decoded.userKey
         const userId = req.decoded.userId
-        Logger.passApp("apiDeleteComment").next("userId").put(userId).next("commentId").put(req.query.id).out()
+        Logger.enterApi("apiDeleteComment").next("userId").put(userId).next("commentId").put(req.query.id).out()
         const result = await commentDelete(commentId, userKey, userId)
         if (result) next()
     } catch (err) {
@@ -452,7 +464,7 @@ exports.apiReactComment = async (req, res, next) => {
         const down = Boolean(req.query.d)
         const userKey = req.decoded.userKey
         const userId = req.decoded.userId
-        Logger.passApp("apiUpComment").next("userId").put(userId).next("commentId").put(req.query.id).next("up").put(req.query.u).next("down").put(req.query.d).out()
+        Logger.enterApi("apiUpComment").next("userId").put(userId).next("commentId").put(req.query.id).next("up").put(req.query.u).next("down").put(req.query.d).out()
         const result = await reactComment(commentId, userKey, up, down, userId)
         if (result) {
             req.result = result
@@ -470,7 +482,7 @@ exports.apiGetCommentList = async (req, res, next) => {
         const userKey = req.decoded.userKey
         const userId = req.decoded.userId
         const boardId = req.query.bid
-        Logger.passApp("apiGetCommentList").next("userId").put(userId).next("sid").put(req.query.sid).next("bid").put(boardId).out()
+        Logger.enterApi("apiGetCommentList").next("userId").put(userId).next("sid").put(req.query.sid).next("bid").put(boardId).out()
         const commentList = await getCommentListByStartId(boardId, startId)
         const endId = await getEndIdOfListInorder(commentList, startId)
         const end = await getEndOfList(commentList)
@@ -489,7 +501,7 @@ exports.apiGetReplyList = async (req, res, next) => {
         const userKey = req.decoded.userKey
         const userId = req.decoded.userId
         const commentId = req.query.cid
-        Logger.passApp("apiGetReplyList").next("userId").put(userId).next("sid").put(req.query.sid).next("cid").put(commentId).out()
+        Logger.enterApi("apiGetReplyList").next("userId").put(userId).next("sid").put(req.query.sid).next("cid").put(commentId).out()
         const commentList = await getReplyListByStartId(commentId, startId)
         const endId = await getEndIdOfListInorder(commentList, startId)
         const end = await getEndOfList(commentList)

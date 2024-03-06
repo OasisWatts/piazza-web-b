@@ -19,6 +19,7 @@ admin.initializeApp({
 const client = new OAuth2Client();
 
 function decodeToken(idToken: string, signedMethod: string) {
+    Logger.passApp("decodeToken").next("signedMethod").put(signedMethod).out()
     if (signedMethod == "google") {
         return new Promise((resolve, reject) => {
             client.verifyIdToken({
@@ -70,6 +71,7 @@ function decodeToken(idToken: string, signedMethod: string) {
  * 로그인 또는 계정 생성
  */
 async function signIn(token: string, signedMethod: string) {
+    Logger.passApp("signIn").next("signedMethod").put(signedMethod).out()
     const decodedToken = await decodeToken(token, signedMethod)
     if (decodedToken) {
         return new Promise((resolve, reject) => {
@@ -88,12 +90,14 @@ async function signIn(token: string, signedMethod: string) {
  * 로그인 또는 계정 생성
  */
 async function signUp(token: string, name: string, signedMethod: string) {
+    Logger.passApp("signUp").next("name").put(name).next("signedMethod").put(signedMethod).out()
     const decodedToken = await decodeToken(token, signedMethod)
     if (decodedToken) {
         return new Promise((resolve, reject) => {
             DB.Manager.findOne(User, { where: { uid: decodedToken["uid"], email: decodedToken["email"] } }).then((user) => {
                 if (!user) {
                     const userId = v4();
+                    Logger.passApp("signUp").put("userId generated").put(userId).next("name").put(name).next("signedMethod").put(signedMethod).out()
                     DB.Manager.save(User, { name, uid: decodedToken["uid"], email: decodedToken["email"], userId: userId }).then((res) => {
                         resolve({ signed: true, name: res.name, userKey: res.key, userId: res.userId })
                         return
@@ -111,7 +115,7 @@ exports.apiSignIn = async (req, res, next) => {
         const token = String(req.body.t)
         const signedMethod = String(req.body.m)
         const result: any = await signIn(token, signedMethod)
-        Logger.passApp("signIn").next("signedMethod").put(signedMethod).out()
+        Logger.enterApi("signIn").next("signedMethod").put(signedMethod).out()
         if (result) {
             if (result.signed) {
                 const token = makeAccessToken(result.userKey, result.userId)
@@ -131,7 +135,7 @@ exports.apiSignUp = async (req, res, next) => {
         const token = String(req.body.t)
         const name = String(req.body.n)
         const signedMethod = String(req.body.m)
-        Logger.passApp("apiSignUp").next("signedMethod").put(signedMethod).next("name").put(name).out()
+        Logger.enterApi("apiSignUp").next("signedMethod").put(signedMethod).next("name").put(name).out()
         if (name.length < 2) return
         const result: any = await signUp(token, name, signedMethod)
         if (result.signed) {

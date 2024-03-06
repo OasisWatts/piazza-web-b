@@ -31,7 +31,7 @@ exports.apiChangeName = async (req, res, next) => {
         const name = String(req.body.name)
         const userKey = req.decoded.userKey
         const userId = req.decoded.userId
-        Logger.passApp("apiChangeName").next("userId").put(userId).next("name").put(name).out()
+        Logger.enterApi("apiChangeName").next("userId").put(userId).next("name").put(name).out()
         const result = await changeName(userKey, name, userId)
         if (result) {
             next()
@@ -45,7 +45,7 @@ exports.apiDeleteAccount = async (req, res, next) => {
     try {
         const userKey = req.decoded.userKey
         const userId = req.decoded.userId
-        Logger.passApp("apiDeleteAccount").next("userId").put(userId).out()
+        Logger.enterApi("apiDeleteAccount").next("userId").put(userId).out()
         const result = await deleteAccount(userKey, userId)
         if (result) {
             next()

@@ -52,6 +52,7 @@ export enum LogColor {
 export enum LogLevel {
       APP_PASS,
       SIG_PASS,
+      API_ENTER,
       APP_ERROR,
       SIG_ERROR
 }
@@ -154,6 +155,14 @@ export class Logger {
        */
       public static passApp(title?: string): Logger {
             return new Logger(LogLevel.APP_PASS, title)
+      }
+      /**
+       * api 호출 로그 인스턴스.
+       *
+       * @param title 제목.
+       */
+      public static enterApi(title?: string): Logger {
+            return new Logger(LogLevel.API_ENTER, title)
       }
       /**
        * 앱 패스 로그 인스턴스.
@@ -267,6 +276,9 @@ export class Logger {
                         break
                   case LogLevel.SIG_PASS:
                         this.putS(LogStyle.TYPE_SUCCESS, "(✓)")
+                        break
+                  case LogLevel.API_ENTER:
+                        this.putS(LogStyle.TYPE_INFO, "(>)")
                         break
                   case LogLevel.SIG_ERROR:
                         this.putS(LogStyle.TYPE_ERROR, "(×)")

@@ -82,7 +82,7 @@ exports.apiUpUrl = async (req, res, next) => {
         let title = String(req.body.t)
         const toCancel = Boolean(req.body.cc)
         const userKey = req.decoded.userKey
-        Logger.passApp("apiUpUrl").next("userId").put(req.decoded.userId).next("urlid").put(String(req.body.uid)).next("title").put(title).next("toCancel").put(String(req.body.cc)).out()
+        Logger.enterApi("apiUpUrl").next("userId").put(req.decoded.userId).next("urlid").put(String(req.body.uid)).next("title").put(title).next("toCancel").put(String(req.body.cc)).out()
         if (isNaN(urlid)) urlid = null
         if (title === "") title = null
         const result = await DB.Manager.transaction(() => UrlReact(urlid, title, userKey, toCancel))
@@ -100,7 +100,7 @@ exports.apiGetUpUrls = async (req, res, next) => {
         const startId = Number(req.query.sid)
         const userKey = req.decoded.userKey
         const userId = req.decoded.userId
-        Logger.passApp("apiGetUpUrls").next("userId").put(userId).next("sid").put(req.query.sid).out()
+        Logger.enterApi("apiGetUpUrls").next("userId").put(userId).next("sid").put(req.query.sid).out()
         const result = await reactedUrls(startId, userKey, userId)
         if (result) {
             req.result = result
@@ -119,7 +119,7 @@ exports.apiGetUrlInfo = async (req, res, next) => {
         const urlname = String(req.body.u)
         const hostname = String(req.body.h)
         const userKey = req.decoded.userKey
-        Logger.passApp("apiGetUrlInfo").next("userId").put(req.decoded.userId).next("urlname").put(urlname).next("hostname").put(hostname).out()
+        Logger.enterApi("apiGetUrlInfo").next("userId").put(req.decoded.userId).next("urlname").put(urlname).next("hostname").put(hostname).out()
         const result = await getUrl(urlname, hostname, userKey)
         if (result) {
             req.result = result

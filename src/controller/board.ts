@@ -24,6 +24,7 @@ async function boardInsert(writerKey: number, contents: string, hashTags: string
     if (urlid) {
         urlObj = await DB.Manager.findOne(Url, { where: { id: urlid } })
         if (urlObj) {
+            Logger.passApp("boardInsert").put("urlObj exists").next("userId").put(userId).next("urlid").put(String(urlid)).next("title").put(title).out()
             if (urlObj.title !== title) await DB.Manager.update(Url, { id: urlid }, { title: title })
         }
     }
@@ -34,6 +35,7 @@ async function boardInsert(writerKey: number, contents: string, hashTags: string
     try {
         await DB.Manager.increment(Url, { id: urlid }, "boardNum", 1)
         if (hashTags.length) {
+            Logger.passApp("boardInsert").put("hashTags exist").next("userId").put(userId).next("urlid").put(String(urlid)).next("title").put(title).out()
             const hashTagPromises = []
             const userHashTagPromises = []
             for (let tag of hashTags) {
@@ -76,6 +78,7 @@ async function boardInsert(writerKey: number, contents: string, hashTags: string
                 await DB.Manager.save(Board, { contents: contents.slice(0, MAX_CONTENTS_LEN), writer: writerKey, isPublic: isPublic, hashTags: hashTagObjs })
             }
         } else {
+            Logger.passApp("boardInsert").put("hashTags don't exist").next("userId").put(userId).next("urlid").put(String(urlid)).next("title").put(title).out()
             if (urlObj) {
                 await DB.Manager.save(Board, { contents: contents.slice(0, MAX_CONTENTS_LEN), writer: writerKey, url: urlObj, isPublic: isPublic })
             } else {
@@ -111,6 +114,7 @@ async function boardUpdate(boardId: number, updaterKey: number, contents: string
     await queryRunner.startTransaction()
     try {
         if (hashTags.length) {
+            Logger.passApp("boardInsert").put("hashTags exist").next("userId").put(userId).next("boardId").put(String(boardId)).out()
             const hashTagPromises = []
             const userHashTagPromises = []
             const newHashTags = []
@@ -181,6 +185,7 @@ async function boardUpdate(boardId: number, updaterKey: number, contents: string
             await Promise.all(userHashTagPromises)
             await DB.Manager.save(Board, { id: boardId, contents: contents.slice(0, MAX_CONTENTS_LEN), writer: updaterKey, updated: true, hashTags: hashTagObjs })
         } else {
+            Logger.passApp("boardInsert").put("hashTags don't exist").next("userId").put(userId).next("boardId").put(String(boardId)).out()
             await DB.Manager.save(Board, { id: boardId, contents: contents.slice(0, MAX_CONTENTS_LEN), writer: updaterKey, updated: true })
         }
         await queryRunner.commitTransaction()
@@ -276,6 +281,7 @@ async function boardChangeType(boardId: number, userKey: number, toPublic: boole
 }
 
 async function upBoard(boardId: number, userKey: number, userId: string) {
+    Logger.passApp("upBoard").next("userId").put(userId).next("boardId").put(String(boardId)).out()
     let error = false
     const queryRunner = DB.connection.createQueryRunner()
     await queryRunner.connect()
@@ -295,6 +301,7 @@ async function upBoard(boardId: number, userKey: number, userId: string) {
     }
 }
 async function upAndCancelDownBoard(boardId: number, userKey: number, userId: string) {
+    Logger.passApp("upAndCancelDownBoard").next("userId").put(userId).next("boardId").put(String(boardId)).out()
     let error = false
     const queryRunner = DB.connection.createQueryRunner()
     await queryRunner.connect()
@@ -316,6 +323,7 @@ async function upAndCancelDownBoard(boardId: number, userKey: number, userId: st
     }
 }
 async function cancelUpBoard(boardId: number, userKey: number, userId: string) {
+    Logger.passApp("cancelUpBoard").next("userId").put(userId).next("boardId").put(String(boardId)).out()
     let error = false
     const queryRunner = DB.connection.createQueryRunner()
     await queryRunner.connect()
@@ -335,6 +343,7 @@ async function cancelUpBoard(boardId: number, userKey: number, userId: string) {
     }
 }
 async function downBoard(boardId: number, userKey: number, userId: string) {
+    Logger.passApp("downBoard").next("userId").put(userId).next("boardId").put(String(boardId)).out()
     let error = false
     const queryRunner = DB.connection.createQueryRunner()
     await queryRunner.connect()
@@ -354,6 +363,7 @@ async function downBoard(boardId: number, userKey: number, userId: string) {
     }
 }
 async function downAndCancelUpBoard(boardId: number, userKey: number, userId: string) {
+    Logger.passApp("downAndCancelUpBoard").next("userId").put(userId).next("boardId").put(String(boardId)).out()
     let error = false
     const queryRunner = DB.connection.createQueryRunner()
     await queryRunner.connect()
@@ -376,6 +386,7 @@ async function downAndCancelUpBoard(boardId: number, userKey: number, userId: st
 
 }
 async function cancelDownBoard(boardId: number, userKey: number, userId: string) {
+    Logger.passApp("cancelDownBoard").next("userId").put(userId).next("boardId").put(String(boardId)).out()
     let error = false
     const queryRunner = DB.connection.createQueryRunner()
     await queryRunner.connect()
@@ -454,7 +465,7 @@ exports.apiInsertBoard = async (req, res, next) => {
         const userId = req.decoded.userId
         const contents = req.body.c
         let hashTagText = req.body.h
-        Logger.passApp("apiInsertBoard").next("userId").put(userId).out()
+        Logger.enterApi("apiInsertBoard").next("userId").put(userId).out()
         let hashTags = []
         if (hashTagText.length != 0) {
             hashTags = hashTagText.split("#")
@@ -481,7 +492,7 @@ exports.apiUpdateBoard = async (req, res, next) => {
         const userKey = req.decoded.userKey
         const userId = req.decoded.userId
         const contents = req.body.c
-        Logger.passApp("apiUpdateBoard").next("userId").put(userId).next("boardId").put(req.query.id).out()
+        Logger.enterApi("apiUpdateBoard").next("userId").put(userId).next("boardId").put(req.query.id).out()
         if (contents.length > MAX_CONTENTS_LEN) return
         let hashTagText = req.body.h
         const hashTags = hashTagText.split("#")
@@ -499,7 +510,7 @@ exports.apiDeleteBoard = async (req, res, next) => {
         const boardId = Number(req.query.id)
         const userKey = req.decoded.userKey
         const userId = req.decoded.userId
-        Logger.passApp("apiDeleteBoard").next("userId").put(userId).next("boardId").put(req.query.id).out()
+        Logger.enterApi("apiDeleteBoard").next("userId").put(userId).next("boardId").put(req.query.id).out()
         const result = await boardDelete(boardId, userKey, userId)
         if (result) next()
     } catch (err) {
@@ -513,7 +524,7 @@ exports.apiChangeBoardType = async (req, res, next) => {
         const forPublic = Boolean(req.query.pb)
         const userKey = req.decoded.userKey
         const userId = req.decoded.userId
-        Logger.passApp("apiChangeBoardType").next("userId").put(userId).next("boardId").put(req.query.id).next("forPublic").put(req.query.pb).out()
+        Logger.enterApi("apiChangeBoardType").next("userId").put(userId).next("boardId").put(req.query.id).next("forPublic").put(req.query.pb).out()
         const result = await boardChangeType(boardId, userKey, forPublic, userId)
         if (result) next()
     } catch (err) {
@@ -528,7 +539,7 @@ exports.apiReactBoard = async (req, res, next) => {
         const down = Boolean(req.query.d)
         const userKey = req.decoded.userKey
         const userId = req.decoded.userId
-        Logger.passApp("apiUpBoard").next("userId").put(userId).next("boardId").put(req.query.id).next("up").put(req.query.u).next("down").put(req.query.d).out()
+        Logger.enterApi("apiUpBoard").next("userId").put(userId).next("boardId").put(req.query.id).next("up").put(req.query.u).next("down").put(req.query.d).out()
         const result = await DB.Manager.transaction(() => reactBoard(boardId, userKey, up, down, userId))
         if (result) {
             req.result = result
