@@ -3,9 +3,14 @@
 
 ---
 ## deploy with docker
-- build image ( 이 폴더의 Dockerfile을 이용해, brownie-back 이라는 이름의 image를 생성 또는 갱신 )
+``` sudo ./deploy.sh ```  
+- nodejs service만 시간을 들이고 두 개 각각 재생성 (down time을 최소화하기 위함)
+#### 설명
+- build image (이 폴더의 Dockerfile을 이용해, brownie-back 이라는 이름의 image를 생성 또는 갱신)
 ``` docker build -t brownie-back . ```  
-- container 생성 (imgae를 기반으로, mysql, node, nginx container)
+- container 생성 (imgae를 기반으로, mysql, node, nginx container 생성)
+</br> mysql에 변동이 없다면 재생성하지 않으나, 변동이 있을 경우 재생성할 수 있고 디비  날라감(첫 세팅아니면 사용 지양) 
+</br> deploy.sh는 nodejs만 재생성하고 있음
 ``` docker-compose up -d ```  
 
 #### 잘 작동이 안 될 때
@@ -56,8 +61,9 @@
 - 갱신 방법: 172.233.129.121:81에 접속해, ssl certificated 갱신
 
 #### log
-- container 자동 생성
+- docker가 container 당 자동 생성
 - log directory: /var/lib/docker/containers/{container ID}/
-- logrotate 정책: 1파일 당 일주일분, 최대 12개 파일을 압축파일 형태로 저장
+- 쉬운 조회: portainer(172.233.129.121:9000)에서 각 container을 선택해 로그를 확인 가능
+- logrotate 정책: 1파일 당 하루분, 최대 30개 파일을 압축파일 형태로 저장
 - logrotate 설정 file: /etc/logrotate.d/docker 
 - logrotate 실행했던 명령어: sudo logrotate -fv /etc/logrotate.d/docker

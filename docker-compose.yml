@@ -18,18 +18,33 @@ services:
     networks: 
       - mysql_node
       # open node servers
-  nodejs:
+  nodejs1:
     build: .
+    container_name: brownie1
     ports:
       - 4416
     deploy:
-      replicas: 2
+      restart_policy:
+        condition: on-failure
     networks: 
       - mysql_node
       - load_balance
     depends_on:
       - db # execute after mysql executed
         # open load balancer with nginx
+  nodejs2:
+    build: .
+    container_name: brownie2
+    ports:
+      - 4416
+    deploy:
+      restart_policy:
+        condition: on-failure
+    networks:
+      - mysql_node
+      - load_balance
+    depends_on:
+      - db
   load-balancer:
     image: nginx
     container_name: nginx
@@ -43,7 +58,8 @@ services:
     networks:
       - load_balance
     depends_on:
-      - nodejs
+      - nodejs1
+      - nodejs2
 
 networks:
   mysql_node:
