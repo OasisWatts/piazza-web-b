@@ -42,12 +42,12 @@ DB.initialize().then(() => {
       app.get("/", async (req, res) => {
             res.send("succeed? succeed!")
       })
-      app.get("/test", async (req, res) => {
-            res.send("test succeed")
+      app.get("/api", async (req, res) => {
+            res.send("api test succeed")
       })
-      app.get("/api/api/myboards", verifyToken, boardListController.apiGetMyBoards, sendWithNewTokenJSON) // 본인이 작성한 게시글 목록 조회.
-      app.get("/api/api/upedboards", verifyToken, boardListController.apiGetMyUpBoards, sendWithNewTokenJSON) // 본인이 up한 게시글 목록 조회.
-      app.get("/api/api/downedboards", verifyToken, boardListController.apiGetMyDownBoards, sendWithNewTokenJSON) // 본인이 down한 게시글 목록 조회.
+      app.get("/api/myboards", verifyToken, boardListController.apiGetMyBoards, sendWithNewTokenJSON) // 본인이 작성한 게시글 목록 조회.
+      app.get("/api/upedboards", verifyToken, boardListController.apiGetMyUpBoards, sendWithNewTokenJSON) // 본인이 up한 게시글 목록 조회.
+      app.get("/api/downedboards", verifyToken, boardListController.apiGetMyDownBoards, sendWithNewTokenJSON) // 본인이 down한 게시글 목록 조회.
       app.get("/api/trendboards", verifyToken, boardListController.apiGetTrendBoards, sendWithNewTokenJSON) // trend 게시글 목록 조회.
       app.get("/api/urlboards", verifyToken, boardListController.apiGetUrlBoards, sendWithNewTokenJSON) // 같은 url의 게시글 목록 조회.
       app.get("/api/myboardsearch", verifyToken, boardListController.apiGetMyBoardSearch, sendWithNewTokenJSON) // 본인이 작성한 게시글 중 검색하여 목록 조회.
