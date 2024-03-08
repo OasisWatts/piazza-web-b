@@ -45,39 +45,39 @@ DB.initialize().then(() => {
       app.get("/test", async (req, res) => {
             res.send("test succeed")
       })
-      app.get("/myboards", verifyToken, boardListController.apiGetMyBoards, sendWithNewTokenJSON) // 본인이 작성한 게시글 목록 조회.
-      app.get("/upedboards", verifyToken, boardListController.apiGetMyUpBoards, sendWithNewTokenJSON) // 본인이 up한 게시글 목록 조회.
-      app.get("/downedboards", verifyToken, boardListController.apiGetMyDownBoards, sendWithNewTokenJSON) // 본인이 down한 게시글 목록 조회.
-      app.get("/trendboards", verifyToken, boardListController.apiGetTrendBoards, sendWithNewTokenJSON) // trend 게시글 목록 조회.
-      app.get("/urlboards", verifyToken, boardListController.apiGetUrlBoards, sendWithNewTokenJSON) // 같은 url의 게시글 목록 조회.
-      app.get("/myboardsearch", verifyToken, boardListController.apiGetMyBoardSearch, sendWithNewTokenJSON) // 본인이 작성한 게시글 중 검색하여 목록 조회.
-      app.get("/upedboardsearch", verifyToken, boardListController.apiGetMyUpSearch, sendWithNewTokenJSON) // 본인이 up한 게시글 중 검색하여 목록 조회.
-      app.get("/boardsearch", verifyToken, boardListController.apiGetBoardSearch, sendWithNewTokenJSON) // 게시글 중 검색하여 목록 조회.
+      app.get("/api/api/myboards", verifyToken, boardListController.apiGetMyBoards, sendWithNewTokenJSON) // 본인이 작성한 게시글 목록 조회.
+      app.get("/api/api/upedboards", verifyToken, boardListController.apiGetMyUpBoards, sendWithNewTokenJSON) // 본인이 up한 게시글 목록 조회.
+      app.get("/api/api/downedboards", verifyToken, boardListController.apiGetMyDownBoards, sendWithNewTokenJSON) // 본인이 down한 게시글 목록 조회.
+      app.get("/api/trendboards", verifyToken, boardListController.apiGetTrendBoards, sendWithNewTokenJSON) // trend 게시글 목록 조회.
+      app.get("/api/urlboards", verifyToken, boardListController.apiGetUrlBoards, sendWithNewTokenJSON) // 같은 url의 게시글 목록 조회.
+      app.get("/api/myboardsearch", verifyToken, boardListController.apiGetMyBoardSearch, sendWithNewTokenJSON) // 본인이 작성한 게시글 중 검색하여 목록 조회.
+      app.get("/api/upedboardsearch", verifyToken, boardListController.apiGetMyUpSearch, sendWithNewTokenJSON) // 본인이 up한 게시글 중 검색하여 목록 조회.
+      app.get("/api/boardsearch", verifyToken, boardListController.apiGetBoardSearch, sendWithNewTokenJSON) // 게시글 중 검색하여 목록 조회.
 
-      app.get("/hashTags", verifyToken, hashTagController.apiGetHashTag, sendWithNewTokenJSON)
+      app.get("/api/hashTags", verifyToken, hashTagController.apiGetHashTag, sendWithNewTokenJSON)
 
-      app.post("/boardInsert", verifyToken, boardController.apiInsertBoard, sendWithNewToken) // 게시글 등록.
-      app.post("/boardUpdate", verifyToken, boardController.apiUpdateBoard, sendWithNewToken) // 게시글 수정.
-      app.get("/boardDelete", verifyToken, boardController.apiDeleteBoard, sendWithNewToken) // 게시글 삭제.
-      app.get("/boardChangeType", verifyToken, boardController.apiChangeBoardType, sendWithNewToken) // 게시글 공개여부 설정.
-      app.get("/boardReact", verifyToken, boardController.apiReactBoard, sendWithNewTokenJSON) // 게시글 좋아요.
+      app.post("/api/boardInsert", verifyToken, boardController.apiInsertBoard, sendWithNewToken) // 게시글 등록.
+      app.post("/api/boardUpdate", verifyToken, boardController.apiUpdateBoard, sendWithNewToken) // 게시글 수정.
+      app.get("/api/boardDelete", verifyToken, boardController.apiDeleteBoard, sendWithNewToken) // 게시글 삭제.
+      app.get("/api/boardChangeType", verifyToken, boardController.apiChangeBoardType, sendWithNewToken) // 게시글 공개여부 설정.
+      app.get("/api/boardReact", verifyToken, boardController.apiReactBoard, sendWithNewTokenJSON) // 게시글 좋아요.
 
-      app.post("/urlReact", verifyToken, urlController.apiUpUrl, sendWithNewTokenJSON) // url 좋아요.
-      app.get("/reactedUrls", verifyToken, urlController.apiGetUpUrls, sendWithNewTokenJSON) // 좋아요한 url.
-      app.post("/url", verifyToken, urlController.apiGetUrlInfo, sendWithNewTokenJSON)
+      app.post("/api/urlReact", verifyToken, urlController.apiUpUrl, sendWithNewTokenJSON) // url 좋아요.
+      app.get("/api/reactedUrls", verifyToken, urlController.apiGetUpUrls, sendWithNewTokenJSON) // 좋아요한 url.
+      app.post("/api/url", verifyToken, urlController.apiGetUrlInfo, sendWithNewTokenJSON)
 
-      app.post("/commentInsert", verifyToken, commentController.apiInsertComment, sendWithNewTokenJSON) // 댓글 등록.
-      app.post("/commentUpdate", verifyToken, commentController.apiUpdateComment, sendWithNewToken) // 댓글 수정.
-      app.get("/commentDelete", verifyToken, commentController.apiDeleteComment, sendWithNewToken) // 댓글 삭제.
-      app.get("/commentReact", verifyToken, commentController.apiReactComment, sendWithNewTokenJSON) // 댓글 좋아요.
-      app.get("/commentListGet", verifyToken, commentController.apiGetCommentList, sendWithNewTokenJSON) // 댓글 목록 가져오기.
-      app.get("/replyListGet", verifyToken, commentController.apiGetReplyList, sendWithNewTokenJSON) // 답글 목록 가져오기.
-      app.post("/replyInsert", verifyToken, commentController.apiInsertReply, sendWithNewTokenJSON) // 답글 등록.
+      app.post("/api/commentInsert", verifyToken, commentController.apiInsertComment, sendWithNewTokenJSON) // 댓글 등록.
+      app.post("/api/commentUpdate", verifyToken, commentController.apiUpdateComment, sendWithNewToken) // 댓글 수정.
+      app.get("/api/commentDelete", verifyToken, commentController.apiDeleteComment, sendWithNewToken) // 댓글 삭제.
+      app.get("/api/commentReact", verifyToken, commentController.apiReactComment, sendWithNewTokenJSON) // 댓글 좋아요.
+      app.get("/api/commentListGet", verifyToken, commentController.apiGetCommentList, sendWithNewTokenJSON) // 댓글 목록 가져오기.
+      app.get("/api/replyListGet", verifyToken, commentController.apiGetReplyList, sendWithNewTokenJSON) // 답글 목록 가져오기.
+      app.post("/api/replyInsert", verifyToken, commentController.apiInsertReply, sendWithNewTokenJSON) // 답글 등록.
 
-      app.post("/signIn", signController.apiSignIn)
-      app.post("/signUp", signController.apiSignUp)
-      app.post("/changeName", verifyToken, userController.apiChangeName, sendWithNewToken)
-      app.get("/deleteAccount", verifyToken, userController.apiDeleteAccount, sendWithNewToken)
+      app.post("/api/signIn", signController.apiSignIn)
+      app.post("/api/signUp", signController.apiSignUp)
+      app.post("/api/changeName", verifyToken, userController.apiChangeName, sendWithNewToken)
+      app.get("/api/deleteAccount", verifyToken, userController.apiDeleteAccount, sendWithNewToken)
 
       if (!CLOTHES.development) {
             app.listen(SETTINGS.port, '0.0.0.0') // container port로 노출 (ssl certificate는 nginx에서 load balance 전에 적용)
