@@ -55,7 +55,7 @@ services:
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
       - /home/docker/nginx_proxy_manager/letsencrypt/live/npm-1/privkey.pem:/etc/nginx/ssl/webrownie/privkey.pem
       - /home/docker/nginx_proxy_manager/letsencrypt/live/npm-1/fullchain.pem:/etc/nginx/ssl/webrownie/fullchain.pem
-      - /home/docker/brownie-web-fe/dist:/home/docker/brownie-web-fe/dist
+      - /home/docker/brownie-web-fe/dist:/home/docker/brownie-web-fe/dist #nginx can access to static files
     networks:
       - load_balance
     depends_on:

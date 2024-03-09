@@ -33,10 +33,11 @@ DB.initialize().then(() => {
       app.use(express.urlencoded({ extended: true }))
       app.use(express.text())
       app.use(express.json())
-      app.use(cors({
+      app.use(cors());
+      /*{
             origin: "*",
             methods: ['GET', 'POST', 'DELETE', 'PUT']
-      }))
+      }))*/
       // 전체 게시글 목록 조회.
       // app.use((req, res, next) => {
       //       console.log("sessin", req.session)
@@ -48,7 +49,7 @@ DB.initialize().then(() => {
             res.send("succeed! succeed!")
       })
       app.get("/api", async (req, res) => {
-            res.send("api test succeed")
+            res.send("api test succeed!!")
       })
       app.get("/api/myboards", verifyToken, boardListController.apiGetMyBoards, sendWithNewTokenJSON) // 본인이 작성한 게시글 목록 조회.
       app.get("/api/upedboards", verifyToken, boardListController.apiGetMyUpBoards, sendWithNewTokenJSON) // 본인이 up한 게시글 목록 조회.

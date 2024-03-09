@@ -6,12 +6,13 @@
 ``` sudo ./deploy.sh ```  
 - nodejs service만 시간을 들이고 두 개 각각 재생성 (down time을 최소화하기 위함)
 #### 설명
-- build image (이 폴더의 Dockerfile을 이용해, brownie-back 이라는 이름의 image를 생성 또는 갱신)
-``` docker build -t brownie-back . ```  
+- build image (이 폴더의 Dockerfile을 이용, docker-compose.yml에 root directory가 설정되어 있음)
+``` docker-compose build nodejs1 nodejs2 ```  
 - container 생성 (imgae를 기반으로, mysql, node, nginx container 생성)
 </br> mysql에 변동이 없다면 재생성하지 않으나, 변동이 있을 경우 재생성할 수 있고 디비  날라감(첫 세팅아니면 사용 지양)
 </br> deploy.sh는 nodejs만 재생성하고 있음
-``` docker-compose up -d ```  
+``` docker-compose up --no-deps nodejs1 -d```  
+``` docker-compose up --no-deps nodejs2 -d```  
 
 #### 잘 작동이 안 될 때
 - docker에 잘 올라와 있나 확인
@@ -22,7 +23,8 @@
 ``` docker exec -it {container name} bash ```
 - mysql 관련 오류가 발생 시, mysql bash 입장
 ``` docker exec -it mysql bash ```
-
+- image를 이름을 지어서 생성
+``` docker build -t {image name} . ```  
 ---
 
 ## deploy website
