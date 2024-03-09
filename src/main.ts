@@ -40,7 +40,7 @@ DB.initialize().then(() => {
       //       next()
       // })
       app.get("/", async (req, res) => {
-            res.send("succeed? succeed!")
+            res.send("succeed! succeed!")
       })
       app.get("/api", async (req, res) => {
             res.send("api test succeed")

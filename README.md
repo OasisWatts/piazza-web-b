@@ -2,7 +2,7 @@
 </br>
 
 ---
-## deploy with docker
+## deploy api with docker
 ``` sudo ./deploy.sh ```  
 - nodejs service만 시간을 들이고 두 개 각각 재생성 (down time을 최소화하기 위함)
 #### 설명
@@ -22,6 +22,15 @@
 ``` docker exec -it {container name} bash ```
 - mysql 관련 오류가 발생 시, mysql bash 입장
 ``` docker exec -it mysql bash ```
+
+---
+
+## deploy website
+``` cd /home/docker/brownie-web-fe && npm run install && npm run build  ```
+#### 설명
+- 해당 위치가 nginx container에 volume으로 mount되어 있음(docker-compose.yml 참고)
+- build 파일만 최신으로 바꿔주면 됨 (따로 옮기거나, nginx을 껐다 키거나 작업 필요 없음)
+
 
 ---
 
