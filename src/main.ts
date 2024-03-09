@@ -16,7 +16,6 @@ const hashTagController = require("controller/hashTag")
 
 const { verifyToken } = require("database/token")
 const app = express()
-//const cors = require("cors");
 
 declare global {
       namespace Express {
@@ -33,11 +32,6 @@ DB.initialize().then(() => {
       app.use(express.urlencoded({ extended: true }))
       app.use(express.text())
       app.use(express.json())
-      //app.use(cors());
-      /*{
-            origin: "*",
-            methods: ['GET', 'POST', 'DELETE', 'PUT']
-      }))*/
       // 전체 게시글 목록 조회.
       // app.use((req, res, next) => {
       //       console.log("sessin", req.session)
