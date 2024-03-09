@@ -28,7 +28,7 @@ async function deleteAccount(userKey: number, userId: string) {
 
 exports.apiChangeName = async (req, res, next) => {
     try {
-        const name = String(req.body.name)
+        const name = String(req.body.n)
         const userKey = req.decoded.userKey
         const userId = req.decoded.userId
         Logger.enterApi("apiChangeName").next("userId").put(userId).next("name").put(name).out()
