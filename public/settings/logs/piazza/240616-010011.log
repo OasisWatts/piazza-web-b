@@ -1,0 +1,6 @@
+[2024-06-16T01:00:11.026Z+9]        logger.ts?:204 shiftFile            (:) [piazza]  
+                                                                         └─ Path: 240616-010011 
+[2024-06-16T01:00:11.066Z+9]     connection.ts?:22 DB.initialize        (✓) [DB]  127.0.0.1 
+[2024-06-16T01:00:22.745Z+9]       waitlist.ts?:18 exports.apiEnrollIn… (△) [api_failed]  apiEnrollInWaitlist 
+                                                                         ├─ email: leahymj@naver.com 
+                                                                         └─ error: err 

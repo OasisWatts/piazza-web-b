@@ -49,9 +49,6 @@ export function writeClientConstants(): void {
       const data = JSON.stringify(pick(
             SETTINGS,
             "host",
-            "board",
-            "follow",
-            "block",
       ))
       fs.writeFileSync(
             path.resolve(__dirname, "constants.js"),

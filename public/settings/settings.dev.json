@@ -4,38 +4,12 @@
       "language-support": {
             "ko-KR": "한국어"
       },
-      "board": {
-            "listLen": 10,
-            "contentsLen": 500,
-            "tagLenLim": 20,
-            "tagCountLim": 20,
-            "trendListLen": 25,
-            "trendListFilterIdRange": 100
-      },
-      "comment": {
-            "contentsLen": 500
-      },
-      "follow": {
-            "limit": 100,
-            "recommendLen": 4,
-            "followLen": 7
-      },
-      "block": {
-            "limit": 300
-      },
-      "session": {
-            "maxAge": 36000000
-      },
-      "cookie": {
-            "maxAge": 86400000,
-            "secret": "brownie"
-      },
       "database": {
             "host": "127.0.0.1",
             "port": 3306,
             "username": "root",
             "password": "ekfkfktk2!",
-            "database": "brownie"
+            "database": "piazza"
       },
       "log": {
             "interval": 8640000000,

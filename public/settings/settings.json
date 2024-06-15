@@ -1,41 +1,15 @@
 {
       "$schema": "./settings.schema.json",
-      "host": "https://webrownie.com",
+      "host": "https://www.piazza.run",
       "language-support": {
             "ko-KR": "한국어"
-      },
-      "board": {
-            "listLen": 15,
-            "contentsLen": 3000,
-            "tagLenLim": 50,
-            "tagCountLim": 10,
-            "trendListLen": 100,
-            "trendListFilterIdRange": 10000
-      },
-      "comment": {
-            "contentsLen": 3000
-      },
-      "follow": {
-            "limit": 100,
-            "recommendLen": 4,
-            "followLen": 7
-      },
-      "block": {
-            "limit": 300
-      },
-      "session": {
-            "maxAge": 36000000
-      },
-      "cookie": {
-            "maxAge": 86400000,
-            "secret": "brownie"
       },
       "database": {
             "host": "mysql",
             "port": 3306,
             "username": "root",
             "password": "ekfkfktk2!",
-            "database": "brownie"
+            "database": "piazza"
       },
       "log": {
             "interval": 8640000000,
