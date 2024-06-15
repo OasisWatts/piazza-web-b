@@ -45,20 +45,6 @@
                         }
                   }
             },
-            "https": {
-                  "type": "object",
-                  "properties": {
-                        "key": {
-                              "type": "string"
-                        },
-                        "cert": {
-                              "type": "string"
-                        },
-                        "ca": {
-                              "type": "string"
-                        }
-                  }
-            },
             "port": {
                   "type": "number"
             }

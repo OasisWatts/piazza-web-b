@@ -15,10 +15,5 @@
             "interval": 8640000000,
             "directory": "logs"
       },
-      "https": {
-            "key": "ssl-privkey.pem",
-            "cert": "ssl-cert.pem",
-            "ca": "ssl-fullchain.pem"
-      },
       "port": 4416
 }
