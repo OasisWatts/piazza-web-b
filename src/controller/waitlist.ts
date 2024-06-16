@@ -3,8 +3,11 @@ import DB from "database/connection"
 import Waitlist from "model/waitlist"
 import { Logger } from "util/logger"
 
-export function enrollInWaitlist(emailtext: string) {
-    DB.Manager.save(Waitlist, { email: emailtext })
+async function enrollInWaitlist(emailtext: string) {
+    const entry = await DB.Manager.findOne(Waitlist, { where: { email: emailtext } })
+    if (!entry) {
+        await DB.Manager.save(Waitlist, { email: emailtext })
+    }
 }
 
 exports.apiEnrollInWaitlist = async (req, res, next) => {
