@@ -4,6 +4,7 @@ import { SETTINGS } from "util/setting"
 import { DataSource, EntityManager } from "typeorm";
 
 import Waitlist from "model/waitlist";
+import Statistics from "model/statistics";
 
 
 export default class DB {
@@ -15,7 +16,8 @@ export default class DB {
 
       public static async initialize(): Promise<void> {
             const entities: Function[] = [
-                  Waitlist
+                  Waitlist,
+                  Statistics
             ]
 
             DB.connection = new DataSource({
@@ -31,6 +33,10 @@ export default class DB {
                   // ssl: SSL_OPTIONS,
             })
             await DB.connection.initialize()
+            const entry = await DB.Manager.findOne(Statistics, { where: { category: "visit" } })
+            if (!entry) {
+                  await DB.Manager.save(Statistics, { category: "visit" })
+            }
             Logger.passSignificant("DB").put(SETTINGS.database.host).out()
       }
 }

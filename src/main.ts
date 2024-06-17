@@ -4,7 +4,7 @@ import { CLOTHES, SETTINGS, writeClientConstants } from "util/setting"
 import { Logger } from "util/logger";
 require('dotenv').config();
 
-const waitlistController = require("controller/waitlist")
+const controller = require("controller/controller")
 
 const app = express()
 const cors = require("cors")
@@ -34,7 +34,8 @@ Logger.initialize("piazza").then(async () => {
             app.get("/api", async (req, res) => {
                   res.send("api test succeed!!")
             })
-            app.get("/api/waitlist", waitlistController.apiEnrollInWaitlist)
+            app.get("/api/waitlist", controller.apiEnrollInWaitlist)
+            app.get("/api/visit", controller.apiCountVisit)
 
             if (!CLOTHES.development) {
                   app.listen(SETTINGS.port, '0.0.0.0') // container port로 노출 (ssl certificate는 nginx에서 load balance 전에 적용)
