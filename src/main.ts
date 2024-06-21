@@ -35,6 +35,7 @@ Logger.initialize("piazza").then(async () => {
                   res.send("api test succeed!!")
             })
             app.get("/api/waitlist", controller.apiEnrollInWaitlist)
+            app.get("/api/countWaitlist", controller.apiCountWaitlist)
             app.get("/api/visit", controller.apiCountVisit)
 
             if (!CLOTHES.development) {
