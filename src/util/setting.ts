@@ -48,7 +48,7 @@ export function fileInBuild(file: string): Buffer {
 export function writeClientConstants(): void {
       const data = JSON.stringify(pick(
             SETTINGS,
-            "host",
+            "host"
       ))
       fs.writeFileSync(
             path.resolve(__dirname, "constants.js"),

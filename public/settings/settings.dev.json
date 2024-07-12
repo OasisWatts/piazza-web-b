@@ -12,7 +12,7 @@
             "database": "piazza"
       },
       "log": {
-            "interval": 8640000000,
+            "interval": 864000000,
             "directory": "logs"
       },
       "port": 4416
